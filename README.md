@@ -12,6 +12,37 @@ A Kotlin compiler plugin that adds **package-private** visibility to Kotlin, sim
 
 ## Installation
 
+### Repository Setup
+
+Add the GitHub Packages repository (requires authentication):
+
+<details>
+<summary><b>Gradle Setup</b></summary>
+
+Add to `~/.gradle/gradle.properties`:
+```properties
+gpr.user=YOUR_GITHUB_USERNAME
+gpr.key=YOUR_GITHUB_TOKEN
+```
+
+Create a token at https://github.com/settings/tokens with `read:packages` scope.
+</details>
+
+<details>
+<summary><b>Maven Setup</b></summary>
+
+Add to `~/.m2/settings.xml`:
+```xml
+<servers>
+  <server>
+    <id>github</id>
+    <username>YOUR_GITHUB_USERNAME</username>
+    <password>YOUR_GITHUB_TOKEN</password>
+  </server>
+</servers>
+```
+</details>
+
 ### Gradle (Kotlin DSL)
 
 ```kotlin
@@ -22,6 +53,13 @@ plugins {
 
 repositories {
     mavenCentral()
+    maven {
+        url = uri("https://maven.pkg.github.com/AlexandrosAlexiou/kotlin-package-private")
+        credentials {
+            username = project.findProperty("gpr.user") as String?
+            password = project.findProperty("gpr.key") as String?
+        }
+    }
 }
 
 dependencies {
@@ -40,6 +78,13 @@ plugins {
 
 repositories {
     mavenCentral()
+    maven {
+        url = uri("https://maven.pkg.github.com/AlexandrosAlexiou/kotlin-package-private")
+        credentials {
+            username = project.findProperty("gpr.user")
+            password = project.findProperty("gpr.key")
+        }
+    }
 }
 
 dependencies {
@@ -51,6 +96,13 @@ dependencies {
 ### Maven
 
 ```xml
+<repositories>
+    <repository>
+        <id>github</id>
+        <url>https://maven.pkg.github.com/AlexandrosAlexiou/kotlin-package-private</url>
+    </repository>
+</repositories>
+
 <dependencies>
     <dependency>
         <groupId>com.acme</groupId>
@@ -229,27 +281,6 @@ mvn compile
 ```bash
 ./gradlew publishToMavenLocal
 ```
-
-### To GitHub Packages
-
-1. Update `build.gradle.kts` with your GitHub username
-2. Create a GitHub release
-3. The `publish.yml` workflow will automatically publish
-
-Or manually:
-
-```bash
-export GITHUB_TOKEN=your_token
-export GITHUB_ACTOR=your_username
-./gradlew publish
-```
-
-### To Maven Central
-
-For Maven Central publishing, you'll need to:
-1. Register at [Sonatype OSSRH](https://central.sonatype.org/)
-2. Add GPG signing configuration
-3. Update the publishing repository URL
 
 ## License
 
