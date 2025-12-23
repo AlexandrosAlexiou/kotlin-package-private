@@ -24,3 +24,10 @@ Thumbs.db
 # Local
 local.properties
 *.log
+bin/
+.classpath
+.project
+.settings/
+
+# Disable JDTLS
+.disable-jdtls

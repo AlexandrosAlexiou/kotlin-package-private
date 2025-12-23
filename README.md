@@ -217,7 +217,16 @@ This project uses a **Kotlin Compiler Plugin** (not KSP) because:
 1. **KSP** is designed for code generation and symbol processing - it cannot report compilation errors for cross-file access violations
 2. **Compiler plugins** can intercept the compilation pipeline and report errors during the FIR (Frontend IR) analysis phase
 
-The plugin registers a `FirAdditionalCheckersExtension` that inspects all call expressions and verifies that package-private symbols are only accessed from within their declared (or overridden) package.
+The plugin has two components:
+
+1. **FIR Checker** - Reports compile-time errors when Kotlin code accesses `@PackagePrivate` symbols from another package
+2. **ClassGenerator Extension** - Modifies JVM bytecode to remove the `public` access flag, making declarations truly package-private at the JVM level
+
+This means **both Kotlin and Java** code are blocked from accessing `@PackagePrivate` declarations from other packages.
+
+### Limitations
+
+- **Runtime reflection**: Reflection can still access `@PackagePrivate` members at runtime using `setAccessible(true)`
 
 ## Project Structure
 

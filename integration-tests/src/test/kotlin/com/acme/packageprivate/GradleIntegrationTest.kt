@@ -38,6 +38,48 @@ class GradleIntegrationTest {
         assertContains(result.output, "package-private")
     }
 
+    @Test
+    fun `java cannot access package-private kotlin class`() {
+        copyResourceProject("java-interop-project", tempDir)
+
+        val result = runGradle(tempDir, "build")
+        // Java should fail to compile because KotlinInternal is now package-private in bytecode
+        assertTrue(result.exitCode != 0, "Build should fail when Java accesses package-private Kotlin: ${result.output}")
+        // Check for access error message (javac reports "not public" for package-private access)
+        assertTrue(
+            result.output.contains("not public") || 
+            result.output.contains("KotlinInternal") ||
+            result.output.contains("cannot be accessed"),
+            "Error should mention access restriction: ${result.output}"
+        )
+    }
+
+    @Test
+    fun `java in same package can access package-private kotlin`() {
+        copyResourceProject("java-interop-project", tempDir)
+        
+        // Move Java file to same package as Kotlin
+        val javaSourceDir = File(tempDir, "src/main/java/com/example/internal")
+        javaSourceDir.mkdirs()
+        
+        File(tempDir, "src/main/java/com/example/other").deleteRecursively()
+        
+        File(javaSourceDir, "JavaSamePackage.java").writeText("""
+            package com.example.internal;
+            
+            // Same package - should be allowed
+            public class JavaSamePackage {
+                public String access() {
+                    KotlinInternal internal = new KotlinInternal();
+                    return internal.publicMethod();
+                }
+            }
+        """.trimIndent())
+
+        val result = runGradle(tempDir, "build")
+        assertTrue(result.exitCode == 0, "Build should succeed for same package access: ${result.output}")
+    }
+
     private fun copyResourceProject(name: String, targetDir: File) {
         // Copy gradle wrapper
         File(rootDir, "gradlew").copyTo(File(targetDir, "gradlew"), overwrite = true)
