@@ -5,6 +5,7 @@ import org.jetbrains.kotlin.backend.jvm.extensions.ClassGeneratorExtension
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrField
 import org.jetbrains.kotlin.ir.declarations.IrFunction
+import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.util.hasAnnotation
 import org.jetbrains.kotlin.name.FqName
@@ -56,6 +57,7 @@ class PackagePrivateClassGeneratorExtension : ClassGeneratorExtension {
             delegate.defineClass(version, modifiedAccess, name, signature, superName, interfaces)
         }
 
+        @OptIn(UnsafeDuringIrConstructionAPI::class)
         override fun newMethod(
             declaration: IrFunction?,
             access: Int,
@@ -65,9 +67,15 @@ class PackagePrivateClassGeneratorExtension : ClassGeneratorExtension {
             exceptions: Array<out String>?,
         ): MethodVisitor {
             val isMethodPackagePrivate = declaration?.hasAnnotation(PACKAGE_PRIVATE_FQ_NAME) == true
+            
+            // Also check if this is a getter/setter of a @PackagePrivate property
+            val isPropertyAccessorPackagePrivate = (declaration as? IrSimpleFunction)
+                ?.correspondingPropertySymbol
+                ?.owner
+                ?.hasAnnotation(PACKAGE_PRIVATE_FQ_NAME) == true
 
             val modifiedAccess =
-                if (isMethodPackagePrivate) {
+                if (isMethodPackagePrivate || isPropertyAccessorPackagePrivate) {
                     // Remove ACC_PUBLIC to make it package-private
                     access and Opcodes.ACC_PUBLIC.inv()
                 } else {
