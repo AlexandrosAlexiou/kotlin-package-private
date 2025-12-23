@@ -39,6 +39,5 @@ jobs:
           files: |
             package-private-annotations/build/libs/*.jar
             package-private-compiler-plugin/build/libs/*.jar
-            package-private-gradle-plugin/build/libs/*.jar
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -13,8 +13,10 @@ subprojects {
     mavenCentral()
   }
 
-  // Apply maven-publish to library modules (not examples or integration-tests)
-  if (!project.path.startsWith(":examples") && project.name != "integration-tests") {
+  // Apply maven-publish to library modules (not examples, integration-tests, or gradle-plugin)
+  if (!project.path.startsWith(":examples") && 
+      project.name != "integration-tests" && 
+      project.name != "package-private-gradle-plugin") {
     apply(plugin = "maven-publish")
 
     afterEvaluate {
