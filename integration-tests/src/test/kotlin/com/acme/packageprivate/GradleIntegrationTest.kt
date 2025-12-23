@@ -59,29 +59,7 @@ class GradleIntegrationTest {
 
     @Test
     fun `java in same package can access package-private kotlin`() {
-        copyResourceProject("java-interop-project", tempDir)
-
-        // Move Java file to same package as Kotlin
-        val javaSourceDir = File(tempDir, "src/main/java/com/example/internal")
-        javaSourceDir.mkdirs()
-
-        File(tempDir, "src/main/java/com/example/other").deleteRecursively()
-
-        File(javaSourceDir, "JavaSamePackage.java")
-            .writeText(
-                """
-            package com.example.internal;
-
-            // Same package - should be allowed
-            public class JavaSamePackage {
-                public String access() {
-                    KotlinInternal internal = new KotlinInternal();
-                    return internal.publicMethod();
-                }
-            }
-        """
-                    .trimIndent()
-            )
+        copyResourceProject("java-same-package-project", tempDir)
 
         val result = runGradle(tempDir, "build")
         assertEquals(
