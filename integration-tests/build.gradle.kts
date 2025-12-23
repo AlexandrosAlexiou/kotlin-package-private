@@ -15,5 +15,4 @@ tasks.test {
   useJUnitPlatform()
   dependsOn(":package-private-annotations:publishToMavenLocal")
   dependsOn(":package-private-compiler-plugin:publishToMavenLocal")
-  dependsOn(":package-private-gradle-plugin:publishToMavenLocal")
 }
