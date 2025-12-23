@@ -231,19 +231,20 @@ The plugin has three components:
 
 ### Platform Support
 
-| Platform | Kotlin Enforcement | Interop Enforcement |
-|----------|-------------------|---------------------|
-| JVM | ✅ FIR Checker | ✅ True JVM package-private (Java blocked) |
-| Native | ✅ FIR Checker | ✅ Internal visibility (C/ObjC limited) |
-| JS | ✅ FIR Checker | ⚠️ Internal visibility (no true enforcement) |
-| Wasm | ✅ FIR Checker | ⚠️ Internal visibility (no true enforcement) |
+| Platform | Compile-time (FIR) | Runtime Enforcement | Notes |
+|----------|-------------------|---------------------|-------|
+| **JVM/Android** | ✅ | ✅ | True JVM package-private bytecode - Java code is blocked |
+| **Native** (iOS, macOS, Linux, Windows) | ✅ | ✅ | IR visibility + internal modifier |
+| **JS** (Browser, Node.js) | ✅ | ⚠️ | Compile-time only - raw JS can bypass |
+| **Wasm** | ✅ | ⚠️ | Compile-time only |
 
-This means **both Kotlin and Java** code are blocked from accessing `@PackagePrivate` declarations from other packages on JVM.
+**Note on JS/Wasm:** JavaScript doesn't have visibility modifiers at runtime. The compiler plugin blocks Kotlin-to-Kotlin access at compile time, but raw JavaScript code can access anything. This is a fundamental limitation of the JS platform.
 
 ### Limitations
 
-- **Runtime reflection**: Reflection can still access `@PackagePrivate` members at runtime using `setAccessible(true)` (JVM)
-- **JS/Wasm**: JavaScript doesn't have true visibility enforcement; `internal` only adds name mangling
+- **Runtime reflection (JVM)**: Reflection can still access `@PackagePrivate` members using `setAccessible(true)`
+- **JS/Wasm**: JavaScript doesn't have true visibility enforcement - only compile-time checks for Kotlin code
+- **Native C interop**: Exported symbols to C headers may still be accessible from C code
 
 ## Project Structure
 

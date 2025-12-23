@@ -1,9 +1,14 @@
 plugins {
   kotlin("jvm") version "2.0.21" apply false
+  kotlin("multiplatform") version "2.0.21" apply false
 }
 
 group = "com.acme"
 version = "0.1.0"
+
+repositories {
+  mavenCentral()
+}
 
 subprojects {
   group = rootProject.group
@@ -21,36 +26,42 @@ subprojects {
 
     afterEvaluate {
       configure<PublishingExtension> {
-        publications {
-          create<MavenPublication>("maven") {
-            from(components.findByName("java") ?: components.findByName("kotlin"))
-            groupId = rootProject.group.toString()
-            artifactId = project.name
-            version = rootProject.version.toString()
+        // For multiplatform projects, Kotlin automatically creates publications
+        // For JVM-only projects, create a maven publication manually
+        val isMultiplatform = plugins.hasPlugin("org.jetbrains.kotlin.multiplatform")
+        
+        if (!isMultiplatform && components.findByName("kotlin") != null) {
+          publications {
+            create<MavenPublication>("maven") {
+              from(components["kotlin"])
+              groupId = rootProject.group.toString()
+              artifactId = project.name
+              version = rootProject.version.toString()
 
-            pom {
-              name.set(project.name)
-              description.set("Kotlin package-private visibility compiler plugin")
-              url.set("https://github.com/AlexandrosAlexiou/kotlin-package-private")
-
-              licenses {
-                license {
-                  name.set("Apache License 2.0")
-                  url.set("https://www.apache.org/licenses/LICENSE-2.0")
-                }
-              }
-
-              developers {
-                developer {
-                  id.set("AlexandrosAlexiou")
-                  name.set("Alexandros Alexiou")
-                }
-              }
-
-              scm {
+              pom {
+                name.set(project.name)
+                description.set("Kotlin package-private visibility compiler plugin")
                 url.set("https://github.com/AlexandrosAlexiou/kotlin-package-private")
-                connection.set("scm:git:git://github.com/AlexandrosAlexiou/kotlin-package-private.git")
-                developerConnection.set("scm:git:ssh://github.com/AlexandrosAlexiou/kotlin-package-private.git")
+
+                licenses {
+                  license {
+                    name.set("Apache License 2.0")
+                    url.set("https://www.apache.org/licenses/LICENSE-2.0")
+                  }
+                }
+
+                developers {
+                  developer {
+                    id.set("AlexandrosAlexiou")
+                    name.set("Alexandros Alexiou")
+                  }
+                }
+
+                scm {
+                  url.set("https://github.com/AlexandrosAlexiou/kotlin-package-private")
+                  connection.set("scm:git:git://github.com/AlexandrosAlexiou/kotlin-package-private.git")
+                  developerConnection.set("scm:git:ssh://github.com/AlexandrosAlexiou/kotlin-package-private.git")
+                }
               }
             }
           }

@@ -21,7 +21,7 @@
         </dependency>
         <dependency>
             <groupId>com.acme</groupId>
-            <artifactId>package-private-annotations</artifactId>
+            <artifactId>package-private-annotations-jvm</artifactId>
             <version>0.1.0</version>
         </dependency>
     </dependencies>
