@@ -80,6 +80,15 @@ class GradleIntegrationTest {
         assertTrue(result.exitCode == 0, "Build should succeed for same package access: ${result.output}")
     }
 
+    @Test
+    fun `java can access public members of class with package-private members`() {
+        copyResourceProject("java-interop-positive-project", tempDir)
+
+        val result = runGradle(tempDir, "build")
+        // Java should successfully access public members even when class has some @PackagePrivate members
+        assertTrue(result.exitCode == 0, "Build should succeed when accessing public members: ${result.output}")
+    }
+
     private fun copyResourceProject(name: String, targetDir: File) {
         // Copy gradle wrapper
         File(rootDir, "gradlew").copyTo(File(targetDir, "gradlew"), overwrite = true)
