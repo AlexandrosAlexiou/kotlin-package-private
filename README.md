@@ -10,7 +10,7 @@ A Kotlin compiler plugin that adds <b>package-private</b> visibility to Kotlin, 
 
 <p align="center">
   <a href="https://kotlinlang.org"><img src="https://img.shields.io/badge/Kotlin-2.0+-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white" alt="Kotlin"></a>
-  <a href="https://github.com/AlexandrosAlexiou/kotlin-package-private/releases/tag/v0.1.0"><img src="https://img.shields.io/badge/Release-v0.1.0-blue?style=for-the-badge" alt="Release"></a>
+  <a href="https://github.com/AlexandrosAlexiou/kotlin-package-private/releases/tag/v1.0.0"><img src="https://img.shields.io/badge/Release-v1.0.0-blue?style=for-the-badge" alt="Release"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-green?style=for-the-badge" alt="License"></a>
   <a href="https://github.com/AlexandrosAlexiou/kotlin-package-private/issues"><img src="https://img.shields.io/github/issues/AlexandrosAlexiou/kotlin-package-private?style=for-the-badge" alt="Issues"></a>
 </p>
@@ -122,8 +122,8 @@ repositories {
 }
 
 dependencies {
-    implementation("com.acme:package-private-annotations:0.1.0")
-    kotlinCompilerPluginClasspath("com.acme:package-private-compiler-plugin:0.1.0")
+    implementation("dev.packageprivate:package-private-annotations:1.0.0")
+    kotlinCompilerPluginClasspath("dev.packageprivate:package-private-compiler-plugin:1.0.0")
 }
 ```
 
@@ -147,8 +147,8 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.acme:package-private-annotations:0.1.0'
-    kotlinCompilerPluginClasspath 'com.acme:package-private-compiler-plugin:0.1.0'
+    implementation 'dev.packageprivate:package-private-annotations:1.0.0'
+    kotlinCompilerPluginClasspath 'dev.packageprivate:package-private-compiler-plugin:1.0.0'
 }
 ```
 
@@ -164,9 +164,9 @@ dependencies {
 
 <dependencies>
     <dependency>
-        <groupId>com.acme</groupId>
+        <groupId>dev.packageprivate</groupId>
         <artifactId>package-private-annotations</artifactId>
-        <version>0.1.0</version>
+        <version>1.0.0</version>
     </dependency>
 </dependencies>
 
@@ -191,9 +191,9 @@ dependencies {
             </configuration>
             <dependencies>
                 <dependency>
-                    <groupId>com.acme</groupId>
+                    <groupId>dev.packageprivate</groupId>
                     <artifactId>package-private-compiler-plugin</artifactId>
-                    <version>0.1.0</version>
+                    <version>1.0.0</version>
                 </dependency>
             </dependencies>
         </plugin>
@@ -209,7 +209,7 @@ dependencies {
 // com/example/internal/Helper.kt
 package com.example.internal
 
-import com.acme.packageprivate.PackagePrivate
+import dev.packageprivate.PackagePrivate
 
 @PackagePrivate
 class Helper {
@@ -261,7 +261,7 @@ The `scope` parameter allows overriding the package scope. This is useful for:
 ```kotlin
 package com.example.generated
 
-import com.acme.packageprivate.PackagePrivate
+import dev.packageprivate.PackagePrivate
 
 // Accessible from com.example.api instead of com.example.generated
 @PackagePrivate(scope = "com.example.api")
