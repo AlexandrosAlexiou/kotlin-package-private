@@ -1,4 +1,4 @@
-rootProject.name = "kotlin-package-private"
+rootProject.name = "package-private"
 
 include(
   ":package-private-annotations",

@@ -41,7 +41,7 @@ subprojects {
               pom {
                 name.set(project.name)
                 description.set("Kotlin package-private visibility compiler plugin")
-                url.set("https://github.com/AlexandrosAlexiou/kotlin-package-private")
+                url.set("https://github.com/AlexandrosAlexiou/package-private")
 
                 licenses {
                   license {
@@ -58,9 +58,9 @@ subprojects {
                 }
 
                 scm {
-                  url.set("https://github.com/AlexandrosAlexiou/kotlin-package-private")
-                  connection.set("scm:git:git://github.com/AlexandrosAlexiou/kotlin-package-private.git")
-                  developerConnection.set("scm:git:ssh://github.com/AlexandrosAlexiou/kotlin-package-private.git")
+                  url.set("https://github.com/AlexandrosAlexiou/package-private")
+                  connection.set("scm:git:git://github.com/AlexandrosAlexiou/package-private.git")
+                  developerConnection.set("scm:git:ssh://github.com/AlexandrosAlexiou/package-private.git")
                 }
               }
             }
@@ -71,7 +71,7 @@ subprojects {
           // GitHub Packages
           maven {
             name = "GitHubPackages"
-            url = uri("https://maven.pkg.github.com/AlexandrosAlexiou/kotlin-package-private")
+            url = uri("https://maven.pkg.github.com/AlexandrosAlexiou/package-private")
             credentials {
               username = project.findProperty("gpr.user") as String? ?: System.getenv("GITHUB_ACTOR")
               password = project.findProperty("gpr.key") as String? ?: System.getenv("GITHUB_TOKEN")

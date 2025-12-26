@@ -1,8 +1,8 @@
 <p align="center">
-  <img src=".github/logo.svg" alt="kotlin-package-private logo" width="150">
+  <img src=".github/logo.svg" alt="package-private logo" width="150">
 </p>
 
-<h1 align="center">kotlin-package-private</h1>
+<h1 align="center">package-private</h1>
 
 <p align="center">
 A Kotlin compiler plugin that adds <b>package-private</b> visibility to Kotlin, similar to Java's default (package) visibility.
@@ -10,9 +10,9 @@ A Kotlin compiler plugin that adds <b>package-private</b> visibility to Kotlin, 
 
 <p align="center">
   <a href="https://kotlinlang.org"><img src="https://img.shields.io/badge/Kotlin-2.0+-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white" alt="Kotlin"></a>
-  <a href="https://github.com/AlexandrosAlexiou/kotlin-package-private/releases/tag/v1.0.0"><img src="https://img.shields.io/badge/Release-v1.0.0-blue?style=for-the-badge" alt="Release"></a>
+  <a href="https://github.com/AlexandrosAlexiou/package-private/releases/tag/v1.0.0"><img src="https://img.shields.io/badge/Release-v1.0.0-blue?style=for-the-badge" alt="Release"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-green?style=for-the-badge" alt="License"></a>
-  <a href="https://github.com/AlexandrosAlexiou/kotlin-package-private/issues"><img src="https://img.shields.io/github/issues/AlexandrosAlexiou/kotlin-package-private?style=for-the-badge" alt="Issues"></a>
+  <a href="https://github.com/AlexandrosAlexiou/package-private/issues"><img src="https://img.shields.io/github/issues/AlexandrosAlexiou/package-private?style=for-the-badge" alt="Issues"></a>
 </p>
 
 <p align="center">
@@ -113,7 +113,7 @@ plugins {
 repositories {
     mavenCentral()
     maven {
-        url = uri("https://maven.pkg.github.com/AlexandrosAlexiou/kotlin-package-private")
+        url = uri("https://maven.pkg.github.com/AlexandrosAlexiou/package-private")
         credentials {
             username = project.findProperty("gpr.user") as String?
             password = project.findProperty("gpr.key") as String?
@@ -138,7 +138,7 @@ plugins {
 repositories {
     mavenCentral()
     maven {
-        url = uri("https://maven.pkg.github.com/AlexandrosAlexiou/kotlin-package-private")
+        url = uri("https://maven.pkg.github.com/AlexandrosAlexiou/package-private")
         credentials {
             username = project.findProperty("gpr.user")
             password = project.findProperty("gpr.key")
@@ -158,7 +158,7 @@ dependencies {
 <repositories>
     <repository>
         <id>github</id>
-        <url>https://maven.pkg.github.com/AlexandrosAlexiou/kotlin-package-private</url>
+        <url>https://maven.pkg.github.com/AlexandrosAlexiou/package-private</url>
     </repository>
 </repositories>
 

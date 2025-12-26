@@ -13,7 +13,7 @@ class NativeIntegrationTest {
 
     private val rootDir: File by lazy {
         var dir = File(System.getProperty("user.dir"))
-        while (dir.name != "kotlin-package-private" && dir.parentFile != null) {
+        while (dir.name != "package-private" && dir.parentFile != null) {
             dir = dir.parentFile
         }
         dir
