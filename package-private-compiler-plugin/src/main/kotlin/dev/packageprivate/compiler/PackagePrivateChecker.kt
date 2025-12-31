@@ -64,7 +64,7 @@ private object PackagePrivateCallChecker : FirCallChecker(MppCheckerKind.Common)
         // For constructors, also check if the containing class is package-private
         if (symbol is FirConstructorSymbol) {
             val returnType = symbol.resolvedReturnType
-            val classSymbol = returnType.toRegularClassSymbol(ctx.session) ?: return
+            val classSymbol = returnType.toRegularClassSymbol() ?: return
             
             val annotation = classSymbol.annotations.firstOrNull { it.hasPackagePrivateClassId() }
             if (annotation != null) {
@@ -132,7 +132,7 @@ private object RedundantPackagePrivateChecker : FirCallableDeclarationChecker(Mp
         
         // Check if containing class also has @PackagePrivate
         val dispatchType = declaration.dispatchReceiverType ?: return
-        val containingClass = dispatchType.toRegularClassSymbol(ctx.session) ?: return
+        val containingClass = dispatchType.toRegularClassSymbol() ?: return
         val classHasPackagePrivate = containingClass.annotations.any { it.hasPackagePrivateClassId() }
         
         if (classHasPackagePrivate) {

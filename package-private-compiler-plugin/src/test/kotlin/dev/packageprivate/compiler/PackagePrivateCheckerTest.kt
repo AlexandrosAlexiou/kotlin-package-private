@@ -366,7 +366,7 @@ class PackagePrivateCheckerTest {
         // Method might be name-mangled, so find it by prefix
         val secretMethod = helperClass.declaredMethods.find { it.name.startsWith("secretMethod") }
         assertNotNull(secretMethod, "secretMethod should exist")
-        assertEquals(false, java.lang.reflect.Modifier.isPublic(secretMethod!!.modifiers),
+        assertEquals(false, java.lang.reflect.Modifier.isPublic(secretMethod.modifiers),
             "secretMethod() should not be public (should be package-private)")
     }
 
@@ -404,7 +404,7 @@ class PackagePrivateCheckerTest {
         // Getter might be name-mangled, so find it by prefix
         val secretGetter = dataClass.declaredMethods.find { it.name.contains("SecretValue") }
         assertNotNull(secretGetter, "secretValue getter should exist")
-        assertEquals(false, java.lang.reflect.Modifier.isPublic(secretGetter!!.modifiers),
+        assertEquals(false, java.lang.reflect.Modifier.isPublic(secretGetter.modifiers),
             "getSecretValue() should not be public (should be package-private)")
     }
 
