@@ -24,7 +24,44 @@ jobs:
         uses: gradle/actions/setup-gradle@v3
 
       - name: Build and test (JVM only)
-        run: ./gradlew build test -x :package-private-annotations:compileKotlinIosArm64 -x :package-private-annotations:compileKotlinIosSimulatorArm64 -x :package-private-annotations:compileKotlinIosX64 -x :package-private-annotations:compileKotlinMacosArm64 -x :package-private-annotations:compileKotlinMacosX64 -x :package-private-annotations:compileKotlinWatchosArm32 -x :package-private-annotations:compileKotlinWatchosArm64 -x :package-private-annotations:compileKotlinWatchosSimulatorArm64 -x :package-private-annotations:compileKotlinWatchosX64 -x :package-private-annotations:compileKotlinTvosArm64 -x :package-private-annotations:compileKotlinTvosSimulatorArm64 -x :package-private-annotations:compileKotlinTvosX64
+        run: |
+          ./gradlew build test \
+            -x :package-private-annotations:compileKotlinIosArm64 \
+            -x :package-private-annotations:compileKotlinIosSimulatorArm64 \
+            -x :package-private-annotations:compileKotlinIosX64 \
+            -x :package-private-annotations:compileKotlinMacosArm64 \
+            -x :package-private-annotations:compileKotlinMacosX64 \
+            -x :package-private-annotations:compileKotlinWatchosArm32 \
+            -x :package-private-annotations:compileKotlinWatchosArm64 \
+            -x :package-private-annotations:compileKotlinWatchosSimulatorArm64 \
+            -x :package-private-annotations:compileKotlinWatchosX64 \
+            -x :package-private-annotations:compileKotlinTvosArm64 \
+            -x :package-private-annotations:compileKotlinTvosSimulatorArm64 \
+            -x :package-private-annotations:compileKotlinTvosX64 \
+            -x :package-private-annotations:iosArm64Klib \
+            -x :package-private-annotations:iosSimulatorArm64Klib \
+            -x :package-private-annotations:iosX64Klib \
+            -x :package-private-annotations:macosArm64Klib \
+            -x :package-private-annotations:macosX64Klib \
+            -x :package-private-annotations:watchosArm32Klib \
+            -x :package-private-annotations:watchosArm64Klib \
+            -x :package-private-annotations:watchosSimulatorArm64Klib \
+            -x :package-private-annotations:watchosX64Klib \
+            -x :package-private-annotations:tvosArm64Klib \
+            -x :package-private-annotations:tvosSimulatorArm64Klib \
+            -x :package-private-annotations:tvosX64Klib \
+            -x :package-private-annotations:generateMetadataFileForIosArm64Publication \
+            -x :package-private-annotations:generateMetadataFileForIosSimulatorArm64Publication \
+            -x :package-private-annotations:generateMetadataFileForIosX64Publication \
+            -x :package-private-annotations:generateMetadataFileForMacosArm64Publication \
+            -x :package-private-annotations:generateMetadataFileForMacosX64Publication \
+            -x :package-private-annotations:generateMetadataFileForWatchosArm32Publication \
+            -x :package-private-annotations:generateMetadataFileForWatchosArm64Publication \
+            -x :package-private-annotations:generateMetadataFileForWatchosSimulatorArm64Publication \
+            -x :package-private-annotations:generateMetadataFileForWatchosX64Publication \
+            -x :package-private-annotations:generateMetadataFileForTvosArm64Publication \
+            -x :package-private-annotations:generateMetadataFileForTvosSimulatorArm64Publication \
+            -x :package-private-annotations:generateMetadataFileForTvosX64Publication
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
