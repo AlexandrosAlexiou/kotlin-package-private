@@ -10,7 +10,7 @@ A Kotlin compiler plugin that adds <b>package-private</b> visibility to Kotlin, 
 
 <p align="center">
   <a href="https://kotlinlang.org"><img src="https://img.shields.io/badge/Kotlin-2.3.0-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white" alt="Kotlin"></a>
-  <a href="https://github.com/AlexandrosAlexiou/package-private/releases/tag/v1.0.0"><img src="https://img.shields.io/badge/Release-v1.0.0-blue?style=for-the-badge" alt="Release"></a>
+  <a href="https://github.com/AlexandrosAlexiou/package-private/releases/tag/v1.1.0"><img src="https://img.shields.io/badge/Release-v1.1.0-blue?style=for-the-badge" alt="Release"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-green?style=for-the-badge" alt="License"></a>
   <a href="https://github.com/AlexandrosAlexiou/package-private/issues"><img src="https://img.shields.io/github/issues/AlexandrosAlexiou/package-private?style=for-the-badge" alt="Issues"></a>
 </p>
@@ -122,8 +122,8 @@ repositories {
 }
 
 dependencies {
-    implementation("dev.packageprivate:package-private-annotations:1.0.0")
-    kotlinCompilerPluginClasspath("dev.packageprivate:package-private-compiler-plugin:1.0.0")
+    implementation("dev.packageprivate:package-private-annotations:1.1.0")
+    kotlinCompilerPluginClasspath("dev.packageprivate:package-private-compiler-plugin:1.1.0")
 }
 ```
 
@@ -147,8 +147,8 @@ repositories {
 }
 
 dependencies {
-    implementation 'dev.packageprivate:package-private-annotations:1.0.0'
-    kotlinCompilerPluginClasspath 'dev.packageprivate:package-private-compiler-plugin:1.0.0'
+    implementation 'dev.packageprivate:package-private-annotations:1.1.0'
+    kotlinCompilerPluginClasspath 'dev.packageprivate:package-private-compiler-plugin:1.1.0'
 }
 ```
 
@@ -166,7 +166,7 @@ dependencies {
     <dependency>
         <groupId>dev.packageprivate</groupId>
         <artifactId>package-private-annotations</artifactId>
-        <version>1.0.0</version>
+        <version>1.1.0</version>
     </dependency>
 </dependencies>
 
@@ -193,7 +193,7 @@ dependencies {
                 <dependency>
                     <groupId>dev.packageprivate</groupId>
                     <artifactId>package-private-compiler-plugin</artifactId>
-                    <version>1.0.0</version>
+                    <version>1.1.0</version>
                 </dependency>
             </dependencies>
         </plugin>
@@ -278,8 +278,6 @@ class GeneratedHelper
 
 **Why compile-time is enough for non-JVM:** Package-private is a JVM concept. For Native/JS/Wasm, there's no equivalent runtime visibility. The FIR checker prevents cross-package access at compile time, which is the only meaningful enforcement possible.
 
-**Why not KSP?** KSP is for code generation - it can't report compilation errors. We need the FIR (Frontend IR) checker to block cross-package access at compile time.
-
 ### Limitations
 
 - **Reflection (JVM)**: Can bypass with `setAccessible(true)`
@@ -307,10 +305,6 @@ Test examples:
 # Maven example (after publishToMavenLocal)
 cd examples/maven && mvn compile
 ```
-
-## License
-
-Apache License 2.0
 
 ## Contributing
 
