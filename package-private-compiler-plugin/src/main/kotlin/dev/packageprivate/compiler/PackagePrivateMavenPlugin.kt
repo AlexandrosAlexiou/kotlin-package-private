@@ -12,7 +12,7 @@ import javax.inject.Named
  */
 @Named("package-private")
 class PackagePrivateMavenPlugin : KotlinMavenPluginExtension {
-    override fun getCompilerPluginId(): String = "com.acme.package-private"
+    override fun getCompilerPluginId(): String = "dev.packageprivate.package-private"
 
     override fun isApplicable(project: MavenProject, execution: MojoExecution): Boolean = true
 

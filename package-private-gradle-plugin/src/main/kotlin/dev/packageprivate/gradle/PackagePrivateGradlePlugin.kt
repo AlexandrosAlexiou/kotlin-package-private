@@ -18,7 +18,7 @@ class PackagePrivateGradlePlugin : KotlinCompilerPluginSupportPlugin {
 
     override fun isApplicable(kotlinCompilation: KotlinCompilation<*>): Boolean = true
 
-    override fun getCompilerPluginId(): String = "com.acme.package-private"
+    override fun getCompilerPluginId(): String = "dev.packageprivate.package-private"
 
     override fun getPluginArtifact(): SubpluginArtifact =
         SubpluginArtifact(
