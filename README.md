@@ -10,7 +10,7 @@ A Kotlin compiler plugin that adds <b>package-private</b> visibility to Kotlin, 
 
 <p align="center">
   <a href="https://kotlinlang.org"><img src="https://img.shields.io/badge/Kotlin-2.3.0-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white" alt="Kotlin"></a>
-  <a href="https://github.com/AlexandrosAlexiou/package-private/releases/tag/v1.1.0"><img src="https://img.shields.io/badge/Release-v1.1.0-blue?style=for-the-badge" alt="Release"></a>
+  <a href="https://github.com/AlexandrosAlexiou/package-private/releases/tag/v1.2.0"><img src="https://img.shields.io/badge/Release-v1.2.0-blue?style=for-the-badge" alt="Release"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-green?style=for-the-badge" alt="License"></a>
   <a href="https://github.com/AlexandrosAlexiou/package-private/issues"><img src="https://img.shields.io/github/issues/AlexandrosAlexiou/package-private?style=for-the-badge" alt="Issues"></a>
 </p>
