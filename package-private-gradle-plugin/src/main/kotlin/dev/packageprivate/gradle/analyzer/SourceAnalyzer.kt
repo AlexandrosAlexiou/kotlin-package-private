@@ -27,7 +27,7 @@ data class Declaration(
 )
 
 enum class DeclarationKind {
-    CLASS, FUNCTION, PROPERTY
+    CLASS, OBJECT, FUNCTION, PROPERTY
 }
 
 enum class Visibility {
@@ -129,6 +129,26 @@ class SourceAnalyzer {
                 ))
             }
             
+            override fun visitObjectDeclaration(declaration: KtObjectDeclaration) {
+                super.visitObjectDeclaration(declaration)
+                // Skip companion objects (they're part of the containing class)
+                if (declaration.isCompanion()) return
+                
+                val name = declaration.name ?: return
+                val fqName = if (packageName.isNotEmpty()) "$packageName.$name" else name
+                
+                declarations.add(Declaration(
+                    fqName = fqName,
+                    packageName = packageName,
+                    name = name,
+                    kind = DeclarationKind.OBJECT,
+                    visibility = declaration.visibilityModifier(),
+                    filePath = filePath,
+                    line = ktFile.getLineNumber(declaration.textOffset) + 1,
+                    hasPackagePrivateAnnotation = declaration.hasPackagePrivateAnnotation()
+                ))
+            }
+            
             override fun visitNamedFunction(function: KtNamedFunction) {
                 super.visitNamedFunction(function)
                 val name = function.name ?: return
@@ -193,10 +213,18 @@ class SourceAnalyzer {
         
         // Collect imports to resolve simple names
         val imports = mutableMapOf<String, String>() // simpleName -> fqName
+        val starImportPackages = mutableListOf<String>() // packages from star imports
+        
         for (importDirective in ktFile.importDirectives) {
-            val importedFqName = importDirective.importedFqName?.asString() ?: continue
-            val simpleName = importedFqName.substringAfterLast('.')
-            imports[simpleName] = importedFqName
+            if (importDirective.isAllUnder) {
+                // Star import: import com.example.*
+                val packageFqName = importDirective.importedFqName?.asString() ?: continue
+                starImportPackages.add(packageFqName)
+            } else {
+                val importedFqName = importDirective.importedFqName?.asString() ?: continue
+                val simpleName = importedFqName.substringAfterLast('.')
+                imports[simpleName] = importedFqName
+            }
         }
         
         ktFile.accept(object : KtTreeVisitorVoid() {
@@ -205,7 +233,7 @@ class SourceAnalyzer {
                 val callee = expression.calleeExpression?.text ?: return
                 
                 // Try to resolve the called name
-                val fqName = resolveToFqName(callee, imports, callerPackage, knownDeclarations)
+                val fqName = resolveToFqName(callee, imports, starImportPackages, callerPackage, knownDeclarations)
                 if (fqName != null && fqName in knownDeclarations) {
                     usages.add(Usage(
                         targetFqName = fqName,
@@ -221,7 +249,7 @@ class SourceAnalyzer {
                 if (expression is KtCallExpression) return // Already handled
                 
                 val name = expression.text
-                val fqName = resolveToFqName(name, imports, callerPackage, knownDeclarations)
+                val fqName = resolveToFqName(name, imports, starImportPackages, callerPackage, knownDeclarations)
                 if (fqName != null && fqName in knownDeclarations) {
                     usages.add(Usage(
                         targetFqName = fqName,
@@ -231,19 +259,65 @@ class SourceAnalyzer {
                     ))
                 }
             }
+            
+            override fun visitDotQualifiedExpression(expression: KtDotQualifiedExpression) {
+                super.visitDotQualifiedExpression(expression)
+                // Handle qualified references like com.example.Helper
+                // For calls like com.example.Helper(), we want to extract com.example.Helper
+                val selectorExpr = expression.selectorExpression
+                val receiverExpr = expression.receiverExpression
+                
+                // Build the qualified name without call arguments
+                val qualifiedName = when (selectorExpr) {
+                    is KtCallExpression -> {
+                        val callName = selectorExpr.calleeExpression?.text ?: return
+                        "${receiverExpr.text}.$callName"
+                    }
+                    else -> expression.text
+                }
+                
+                // Check if the qualified name matches a known declaration
+                if (qualifiedName in knownDeclarations) {
+                    usages.add(Usage(
+                        targetFqName = qualifiedName,
+                        callerPackage = callerPackage,
+                        filePath = filePath,
+                        line = ktFile.getLineNumber(expression.textOffset) + 1
+                    ))
+                }
+            }
+            
+            override fun visitTypeReference(typeReference: KtTypeReference) {
+                super.visitTypeReference(typeReference)
+                // Handle type references like: val x: Helper, fun foo(): Helper
+                val typeText = typeReference.text
+                // Remove nullability markers and generics for lookup
+                val simpleName = typeText.replace("?", "").substringBefore("<").trim()
+                
+                val fqName = resolveToFqName(simpleName, imports, starImportPackages, callerPackage, knownDeclarations)
+                if (fqName != null && fqName in knownDeclarations) {
+                    usages.add(Usage(
+                        targetFqName = fqName,
+                        callerPackage = callerPackage,
+                        filePath = filePath,
+                        line = ktFile.getLineNumber(typeReference.textOffset) + 1
+                    ))
+                }
+            }
         })
     }
     
     private fun resolveToFqName(
         name: String,
         imports: Map<String, String>,
+        starImportPackages: List<String>,
         currentPackage: String,
         knownDeclarations: Set<String>
     ): String? {
         // Check if it's already a fully qualified name
         if (name in knownDeclarations) return name
         
-        // Check imports
+        // Check explicit imports
         val importedFqName = imports[name]
         if (importedFqName != null && importedFqName in knownDeclarations) {
             return importedFqName
@@ -253,6 +327,14 @@ class SourceAnalyzer {
         val samePackageFqName = if (currentPackage.isNotEmpty()) "$currentPackage.$name" else name
         if (samePackageFqName in knownDeclarations) {
             return samePackageFqName
+        }
+        
+        // Check star imports
+        for (starPackage in starImportPackages) {
+            val starFqName = "$starPackage.$name"
+            if (starFqName in knownDeclarations) {
+                return starFqName
+            }
         }
         
         return null

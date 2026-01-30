@@ -417,4 +417,172 @@ class SourceAnalyzerTest {
             analyzer.dispose()
         }
     }
+
+    @Test
+    fun `handles star imports correctly`() {
+        val internalPkg = File(tempDir, "com/example/internal").apply { mkdirs() }
+        val apiPkg = File(tempDir, "com/example/api").apply { mkdirs() }
+        
+        File(internalPkg, "Helper.kt").writeText("""
+            package com.example.internal
+            
+            class Helper
+        """.trimIndent())
+        
+        File(apiPkg, "Api.kt").writeText("""
+            package com.example.api
+            
+            import com.example.internal.*
+            
+            fun useHelper() = Helper()
+        """.trimIndent())
+        
+        val analyzer = SourceAnalyzer()
+        try {
+            val result = analyzer.analyze(tempDir.walkTopDown().filter { it.extension == "kt" }.toList())
+            
+            val finder = CandidateFinder()
+            val candidates = finder.findCandidates(result)
+            
+            // Helper should NOT be a candidate (used via star import from different package)
+            val helperCandidate = candidates.find { it.declaration.name == "Helper" }
+            assertTrue(helperCandidate == null, "Helper should NOT be a candidate when used via star import cross-package")
+        } finally {
+            analyzer.dispose()
+        }
+    }
+
+    @Test
+    fun `handles qualified references correctly`() {
+        val internalPkg = File(tempDir, "com/example/internal").apply { mkdirs() }
+        val apiPkg = File(tempDir, "com/example/api").apply { mkdirs() }
+        
+        File(internalPkg, "Helper.kt").writeText("""
+            package com.example.internal
+            
+            class Helper
+        """.trimIndent())
+        
+        File(apiPkg, "Api.kt").writeText("""
+            package com.example.api
+            
+            fun useHelper() = com.example.internal.Helper()
+        """.trimIndent())
+        
+        val analyzer = SourceAnalyzer()
+        try {
+            val result = analyzer.analyze(tempDir.walkTopDown().filter { it.extension == "kt" }.toList())
+            
+            val finder = CandidateFinder()
+            val candidates = finder.findCandidates(result)
+            
+            // Helper should NOT be a candidate (used via qualified reference from different package)
+            val helperCandidate = candidates.find { it.declaration.name == "Helper" }
+            assertTrue(helperCandidate == null, "Helper should NOT be a candidate when used via qualified reference cross-package")
+        } finally {
+            analyzer.dispose()
+        }
+    }
+
+    @Test
+    fun `handles type references correctly`() {
+        val internalPkg = File(tempDir, "com/example/internal").apply { mkdirs() }
+        val apiPkg = File(tempDir, "com/example/api").apply { mkdirs() }
+        
+        File(internalPkg, "Helper.kt").writeText("""
+            package com.example.internal
+            
+            class Helper
+        """.trimIndent())
+        
+        File(apiPkg, "Api.kt").writeText("""
+            package com.example.api
+            
+            import com.example.internal.Helper
+            
+            fun useHelper(): Helper? = null
+        """.trimIndent())
+        
+        val analyzer = SourceAnalyzer()
+        try {
+            val result = analyzer.analyze(tempDir.walkTopDown().filter { it.extension == "kt" }.toList())
+            
+            val finder = CandidateFinder()
+            val candidates = finder.findCandidates(result)
+            
+            // Helper should NOT be a candidate (used as type reference from different package)
+            val helperCandidate = candidates.find { it.declaration.name == "Helper" }
+            assertTrue(helperCandidate == null, "Helper should NOT be a candidate when used as type reference cross-package")
+        } finally {
+            analyzer.dispose()
+        }
+    }
+
+    @Test
+    fun `finds object declaration as candidate`() {
+        val internalPkg = File(tempDir, "com/example/internal").apply { mkdirs() }
+        
+        File(internalPkg, "Singleton.kt").writeText("""
+            package com.example.internal
+            
+            object Singleton {
+                fun doWork(): Int = 42
+            }
+        """.trimIndent())
+        
+        File(internalPkg, "Service.kt").writeText("""
+            package com.example.internal
+            
+            fun useSingleton() = Singleton.doWork()
+        """.trimIndent())
+        
+        val analyzer = SourceAnalyzer()
+        try {
+            val result = analyzer.analyze(tempDir.walkTopDown().filter { it.extension == "kt" }.toList())
+            
+            val finder = CandidateFinder()
+            val candidates = finder.findCandidates(result)
+            
+            val singletonCandidate = candidates.find { it.declaration.name == "Singleton" }
+            assertTrue(singletonCandidate != null, "Object declaration should be a candidate")
+            assertEquals(DeclarationKind.OBJECT, singletonCandidate.declaration.kind)
+        } finally {
+            analyzer.dispose()
+        }
+    }
+
+    @Test
+    fun `excludes object used cross-package`() {
+        val internalPkg = File(tempDir, "com/example/internal").apply { mkdirs() }
+        val apiPkg = File(tempDir, "com/example/api").apply { mkdirs() }
+        
+        File(internalPkg, "Singleton.kt").writeText("""
+            package com.example.internal
+            
+            object Singleton {
+                fun doWork(): Int = 42
+            }
+        """.trimIndent())
+        
+        File(apiPkg, "Api.kt").writeText("""
+            package com.example.api
+            
+            import com.example.internal.Singleton
+            
+            fun useSingleton() = Singleton.doWork()
+        """.trimIndent())
+        
+        val analyzer = SourceAnalyzer()
+        try {
+            val result = analyzer.analyze(tempDir.walkTopDown().filter { it.extension == "kt" }.toList())
+            
+            val finder = CandidateFinder()
+            val candidates = finder.findCandidates(result)
+            
+            val singletonCandidate = candidates.find { it.declaration.name == "Singleton" }
+            assertTrue(singletonCandidate == null, "Object used cross-package should NOT be a candidate")
+        } finally {
+            analyzer.dispose()
+        }
+    }
 }

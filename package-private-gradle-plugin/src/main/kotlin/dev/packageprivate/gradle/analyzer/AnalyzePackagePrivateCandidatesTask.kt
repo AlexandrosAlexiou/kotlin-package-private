@@ -110,6 +110,7 @@ abstract class AnalyzePackagePrivateCandidatesTask : DefaultTask() {
             appendLine("═══════════════════════════════════════════════════════════════")
             appendLine("  Summary: ${candidates.size} candidates found")
             appendLine("  - Classes: ${candidates.count { it.declaration.kind == DeclarationKind.CLASS }}")
+            appendLine("  - Objects: ${candidates.count { it.declaration.kind == DeclarationKind.OBJECT }}")
             appendLine("  - Functions: ${candidates.count { it.declaration.kind == DeclarationKind.FUNCTION }}")
             appendLine("  - Properties: ${candidates.count { it.declaration.kind == DeclarationKind.PROPERTY }}")
             appendLine("═══════════════════════════════════════════════════════════════")

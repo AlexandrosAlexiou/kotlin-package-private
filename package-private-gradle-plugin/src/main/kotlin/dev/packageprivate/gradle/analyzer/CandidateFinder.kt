@@ -68,6 +68,7 @@ data class Candidate(
     fun format(): String {
         val kindStr = when (declaration.kind) {
             DeclarationKind.CLASS -> "class"
+            DeclarationKind.OBJECT -> "object"
             DeclarationKind.FUNCTION -> "function"
             DeclarationKind.PROPERTY -> "property"
         }
