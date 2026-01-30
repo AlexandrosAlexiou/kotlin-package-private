@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.io.File
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 class SourceAnalyzerTest {
@@ -692,6 +693,400 @@ class SourceAnalyzerTest {
             
             // PublicApi is used from com.acme.other via star import and qualified ref - NOT a candidate
             assertTrue("PublicApi" !in candidateNames, "PublicApi should NOT be a candidate (used cross-package)")
+        } finally {
+            analyzer.dispose()
+        }
+    }
+
+    @Test
+    fun `finds nested class as candidate`() {
+        val pkg = File(tempDir, "com/example").apply { mkdirs() }
+        
+        File(pkg, "Outer.kt").writeText("""
+            package com.example
+            
+            class Outer {
+                class Inner {
+                    fun doWork(): Int = 42
+                }
+            }
+        """.trimIndent())
+        
+        File(pkg, "Usage.kt").writeText("""
+            package com.example
+            
+            fun useInner() = Outer.Inner().doWork()
+        """.trimIndent())
+        
+        val analyzer = SourceAnalyzer()
+        try {
+            val result = analyzer.analyze(tempDir.walkTopDown().filter { it.extension == "kt" }.toList())
+            
+            val finder = CandidateFinder()
+            val candidates = finder.findCandidates(result)
+            
+            // Both Outer and Inner should be candidates (only used within package)
+            val candidateNames = candidates.map { it.declaration.name }.toSet()
+            assertTrue("Outer" in candidateNames, "Outer should be a candidate")
+            assertTrue("Inner" in candidateNames, "Inner should be a candidate")
+        } finally {
+            analyzer.dispose()
+        }
+    }
+
+    @Test
+    fun `excludes nested class used cross-package`() {
+        val internalPkg = File(tempDir, "com/example/internal").apply { mkdirs() }
+        val apiPkg = File(tempDir, "com/example/api").apply { mkdirs() }
+        
+        File(internalPkg, "Container.kt").writeText("""
+            package com.example.internal
+            
+            class Container {
+                class Nested {
+                    fun compute(): Int = 42
+                }
+            }
+        """.trimIndent())
+        
+        File(apiPkg, "Api.kt").writeText("""
+            package com.example.api
+            
+            import com.example.internal.Container
+            
+            fun useNested() = Container.Nested().compute()
+        """.trimIndent())
+        
+        val analyzer = SourceAnalyzer()
+        try {
+            val result = analyzer.analyze(tempDir.walkTopDown().filter { it.extension == "kt" }.toList())
+            
+            val finder = CandidateFinder()
+            val candidates = finder.findCandidates(result)
+            
+            val candidateNames = candidates.map { it.declaration.name }.toSet()
+            assertTrue("Container" !in candidateNames, "Container should NOT be a candidate (used cross-package)")
+        } finally {
+            analyzer.dispose()
+        }
+    }
+
+    @Test
+    fun `finds enum class as candidate`() {
+        val pkg = File(tempDir, "com/example").apply { mkdirs() }
+        
+        File(pkg, "Status.kt").writeText("""
+            package com.example
+            
+            enum class Status {
+                ACTIVE, INACTIVE, PENDING
+            }
+        """.trimIndent())
+        
+        File(pkg, "Service.kt").writeText("""
+            package com.example
+            
+            class Service {
+                fun getStatus(): Status = Status.ACTIVE
+            }
+        """.trimIndent())
+        
+        val analyzer = SourceAnalyzer()
+        try {
+            val result = analyzer.analyze(tempDir.walkTopDown().filter { it.extension == "kt" }.toList())
+            
+            val finder = CandidateFinder()
+            val candidates = finder.findCandidates(result)
+            
+            val statusCandidate = candidates.find { it.declaration.name == "Status" }
+            assertNotNull(statusCandidate, "Status should be a candidate")
+            assertEquals(DeclarationKind.ENUM_CLASS, statusCandidate?.declaration?.kind)
+        } finally {
+            analyzer.dispose()
+        }
+    }
+
+    @Test
+    fun `finds sealed class as candidate`() {
+        val pkg = File(tempDir, "com/example").apply { mkdirs() }
+        
+        File(pkg, "Result.kt").writeText("""
+            package com.example
+            
+            sealed class Result {
+                data class Success(val value: Int) : Result()
+                data class Error(val msg: String) : Result()
+            }
+        """.trimIndent())
+        
+        File(pkg, "Service.kt").writeText("""
+            package com.example
+            
+            fun process(): Result = Result.Success(42)
+        """.trimIndent())
+        
+        val analyzer = SourceAnalyzer()
+        try {
+            val result = analyzer.analyze(tempDir.walkTopDown().filter { it.extension == "kt" }.toList())
+            
+            val finder = CandidateFinder()
+            val candidates = finder.findCandidates(result)
+            
+            val resultCandidate = candidates.find { it.declaration.name == "Result" }
+            assertNotNull(resultCandidate, "Result should be a candidate")
+            assertEquals(DeclarationKind.SEALED_CLASS, resultCandidate?.declaration?.kind)
+        } finally {
+            analyzer.dispose()
+        }
+    }
+
+    @Test
+    fun `finds typealias as candidate`() {
+        val pkg = File(tempDir, "com/example").apply { mkdirs() }
+        
+        File(pkg, "Types.kt").writeText("""
+            package com.example
+            
+            typealias StringList = List<String>
+            typealias Handler = (Int) -> String
+        """.trimIndent())
+        
+        File(pkg, "Service.kt").writeText("""
+            package com.example
+            
+            fun getList(): StringList = listOf("a", "b")
+        """.trimIndent())
+        
+        val analyzer = SourceAnalyzer()
+        try {
+            val result = analyzer.analyze(tempDir.walkTopDown().filter { it.extension == "kt" }.toList())
+            
+            val finder = CandidateFinder()
+            val candidates = finder.findCandidates(result)
+            
+            val stringListCandidate = candidates.find { it.declaration.name == "StringList" }
+            assertNotNull(stringListCandidate, "StringList should be a candidate")
+            assertEquals(DeclarationKind.TYPEALIAS, stringListCandidate?.declaration?.kind)
+            
+            // Handler is not used, so still a candidate
+            val handlerCandidate = candidates.find { it.declaration.name == "Handler" }
+            assertNotNull(handlerCandidate, "Handler should be a candidate")
+        } finally {
+            analyzer.dispose()
+        }
+    }
+
+    @Test
+    fun `excludes class used in inheritance cross-package`() {
+        val basePkg = File(tempDir, "com/example/base").apply { mkdirs() }
+        val implPkg = File(tempDir, "com/example/impl").apply { mkdirs() }
+        
+        File(basePkg, "BaseClass.kt").writeText("""
+            package com.example.base
+            
+            open class BaseClass {
+                open fun doWork(): Int = 0
+            }
+        """.trimIndent())
+        
+        File(implPkg, "Impl.kt").writeText("""
+            package com.example.impl
+            
+            import com.example.base.BaseClass
+            
+            class Impl : BaseClass() {
+                override fun doWork(): Int = 42
+            }
+        """.trimIndent())
+        
+        val analyzer = SourceAnalyzer()
+        try {
+            val result = analyzer.analyze(tempDir.walkTopDown().filter { it.extension == "kt" }.toList())
+            
+            val finder = CandidateFinder()
+            val candidates = finder.findCandidates(result)
+            
+            val baseCandidate = candidates.find { it.declaration.name == "BaseClass" }
+            assertTrue(baseCandidate == null, "BaseClass should NOT be a candidate (used in inheritance cross-package)")
+        } finally {
+            analyzer.dispose()
+        }
+    }
+
+    @Test
+    fun `excludes interface used in inheritance cross-package`() {
+        val basePkg = File(tempDir, "com/example/base").apply { mkdirs() }
+        val implPkg = File(tempDir, "com/example/impl").apply { mkdirs() }
+        
+        File(basePkg, "Service.kt").writeText("""
+            package com.example.base
+            
+            interface Service {
+                fun execute(): String
+            }
+        """.trimIndent())
+        
+        File(implPkg, "ServiceImpl.kt").writeText("""
+            package com.example.impl
+            
+            import com.example.base.Service
+            
+            class ServiceImpl : Service {
+                override fun execute(): String = "done"
+            }
+        """.trimIndent())
+        
+        val analyzer = SourceAnalyzer()
+        try {
+            val result = analyzer.analyze(tempDir.walkTopDown().filter { it.extension == "kt" }.toList())
+            
+            val finder = CandidateFinder()
+            val candidates = finder.findCandidates(result)
+            
+            val serviceCandidate = candidates.find { it.declaration.name == "Service" }
+            assertTrue(serviceCandidate == null, "Service interface should NOT be a candidate (implemented cross-package)")
+        } finally {
+            analyzer.dispose()
+        }
+    }
+
+    @Test
+    fun `excludes class used in generic type parameter cross-package`() {
+        val modelPkg = File(tempDir, "com/example/model").apply { mkdirs() }
+        val servicePkg = File(tempDir, "com/example/service").apply { mkdirs() }
+        
+        File(modelPkg, "Entity.kt").writeText("""
+            package com.example.model
+            
+            class Entity(val id: Int)
+        """.trimIndent())
+        
+        File(servicePkg, "Repository.kt").writeText("""
+            package com.example.service
+            
+            import com.example.model.Entity
+            
+            class Repository {
+                private val items: List<Entity> = emptyList()
+                
+                fun getAll(): List<Entity> = items
+            }
+        """.trimIndent())
+        
+        val analyzer = SourceAnalyzer()
+        try {
+            val result = analyzer.analyze(tempDir.walkTopDown().filter { it.extension == "kt" }.toList())
+            
+            val finder = CandidateFinder()
+            val candidates = finder.findCandidates(result)
+            
+            val entityCandidate = candidates.find { it.declaration.name == "Entity" }
+            assertTrue(entityCandidate == null, "Entity should NOT be a candidate (used in generic cross-package)")
+        } finally {
+            analyzer.dispose()
+        }
+    }
+
+    @Test
+    fun `excludes annotation used cross-package`() {
+        val annotationPkg = File(tempDir, "com/example/annotation").apply { mkdirs() }
+        val usagePkg = File(tempDir, "com/example/usage").apply { mkdirs() }
+        
+        File(annotationPkg, "MyAnnotation.kt").writeText("""
+            package com.example.annotation
+            
+            annotation class MyAnnotation
+        """.trimIndent())
+        
+        File(usagePkg, "Service.kt").writeText("""
+            package com.example.usage
+            
+            import com.example.annotation.MyAnnotation
+            
+            @MyAnnotation
+            class Service {
+                fun doWork(): Int = 42
+            }
+        """.trimIndent())
+        
+        val analyzer = SourceAnalyzer()
+        try {
+            val result = analyzer.analyze(tempDir.walkTopDown().filter { it.extension == "kt" }.toList())
+            
+            val finder = CandidateFinder()
+            val candidates = finder.findCandidates(result)
+            
+            val annotationCandidate = candidates.find { it.declaration.name == "MyAnnotation" }
+            assertTrue(annotationCandidate == null, "MyAnnotation should NOT be a candidate (used cross-package)")
+        } finally {
+            analyzer.dispose()
+        }
+    }
+
+    @Test
+    fun `finds extension function as candidate`() {
+        val pkg = File(tempDir, "com/example").apply { mkdirs() }
+        
+        File(pkg, "Extensions.kt").writeText("""
+            package com.example
+            
+            fun String.toTitleCase(): String = this.replaceFirstChar { it.uppercase() }
+        """.trimIndent())
+        
+        File(pkg, "Usage.kt").writeText("""
+            package com.example
+            
+            fun formatName(name: String) = name.toTitleCase()
+        """.trimIndent())
+        
+        val analyzer = SourceAnalyzer()
+        try {
+            val result = analyzer.analyze(tempDir.walkTopDown().filter { it.extension == "kt" }.toList())
+            
+            // Extension function should be tracked
+            val extensionDecl = result.declarations.find { it.name == "toTitleCase" }
+            assertNotNull(extensionDecl, "Extension function should be tracked")
+            assertEquals(DeclarationKind.FUNCTION, extensionDecl?.kind)
+        } finally {
+            analyzer.dispose()
+        }
+    }
+
+    @Test
+    fun `handles complex generic types`() {
+        val modelPkg = File(tempDir, "com/example/model").apply { mkdirs() }
+        val servicePkg = File(tempDir, "com/example/service").apply { mkdirs() }
+        
+        File(modelPkg, "Models.kt").writeText("""
+            package com.example.model
+            
+            class Key(val id: String)
+            class Value(val data: Int)
+        """.trimIndent())
+        
+        File(servicePkg, "Cache.kt").writeText("""
+            package com.example.service
+            
+            import com.example.model.Key
+            import com.example.model.Value
+            
+            class Cache {
+                private val data: Map<Key, List<Value>> = emptyMap()
+            }
+        """.trimIndent())
+        
+        val analyzer = SourceAnalyzer()
+        try {
+            val result = analyzer.analyze(tempDir.walkTopDown().filter { it.extension == "kt" }.toList())
+            
+            val finder = CandidateFinder()
+            val candidates = finder.findCandidates(result)
+            
+            val keyCandidate = candidates.find { it.declaration.name == "Key" }
+            val valueCandidate = candidates.find { it.declaration.name == "Value" }
+            
+            assertTrue(keyCandidate == null, "Key should NOT be a candidate (used in generic cross-package)")
+            assertTrue(valueCandidate == null, "Value should NOT be a candidate (used in generic cross-package)")
         } finally {
             analyzer.dispose()
         }

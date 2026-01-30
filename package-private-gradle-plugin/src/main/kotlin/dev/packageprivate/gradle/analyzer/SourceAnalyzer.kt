@@ -27,7 +27,7 @@ data class Declaration(
 )
 
 enum class DeclarationKind {
-    CLASS, OBJECT, FUNCTION, PROPERTY
+    CLASS, OBJECT, FUNCTION, PROPERTY, ENUM_CLASS, SEALED_CLASS, SEALED_INTERFACE, TYPEALIAS
 }
 
 enum class Visibility {
@@ -112,16 +112,46 @@ class SourceAnalyzer {
         val filePath = ktFile.name
         
         ktFile.accept(object : KtTreeVisitorVoid() {
+            
+            private fun getContainingFqNamePrefix(element: org.jetbrains.kotlin.com.intellij.psi.PsiElement): String? {
+                var parent = element.parent
+                while (parent != null) {
+                    when (parent) {
+                        is KtClassOrObject -> {
+                            val containerFqName = parent.fqName?.asString()
+                            if (containerFqName != null) return containerFqName
+                        }
+                    }
+                    parent = parent.parent
+                }
+                return null
+            }
+            
             override fun visitClass(klass: KtClass) {
                 super.visitClass(klass)
                 val name = klass.name ?: return
-                val fqName = if (packageName.isNotEmpty()) "$packageName.$name" else name
+                
+                // Determine kind based on class type
+                val kind = when {
+                    klass.isEnum() -> DeclarationKind.ENUM_CLASS
+                    klass.isSealed() && klass.isInterface() -> DeclarationKind.SEALED_INTERFACE
+                    klass.isSealed() -> DeclarationKind.SEALED_CLASS
+                    else -> DeclarationKind.CLASS
+                }
+                
+                // Handle nested classes
+                val containerFqName = getContainingFqNamePrefix(klass)
+                val fqName = when {
+                    containerFqName != null -> "$containerFqName.$name"
+                    packageName.isNotEmpty() -> "$packageName.$name"
+                    else -> name
+                }
                 
                 declarations.add(Declaration(
                     fqName = fqName,
                     packageName = packageName,
                     name = name,
-                    kind = DeclarationKind.CLASS,
+                    kind = kind,
                     visibility = klass.visibilityModifier(),
                     filePath = filePath,
                     line = ktFile.getLineNumber(klass.textOffset) + 1,
@@ -135,7 +165,14 @@ class SourceAnalyzer {
                 if (declaration.isCompanion()) return
                 
                 val name = declaration.name ?: return
-                val fqName = if (packageName.isNotEmpty()) "$packageName.$name" else name
+                
+                // Handle nested objects
+                val containerFqName = getContainingFqNamePrefix(declaration)
+                val fqName = when {
+                    containerFqName != null -> "$containerFqName.$name"
+                    packageName.isNotEmpty() -> "$packageName.$name"
+                    else -> name
+                }
                 
                 declarations.add(Declaration(
                     fqName = fqName,
@@ -155,14 +192,15 @@ class SourceAnalyzer {
                 // Skip local functions
                 if (function.isLocal) return
                 
-                val containingClass = function.parent?.parent as? KtClassOrObject
+                // Check if it's an extension function - include receiver type in fqName
+                val receiverType = function.receiverTypeReference?.text
+                val functionName = if (receiverType != null) "$receiverType.$name" else name
+                
+                val containerFqName = getContainingFqNamePrefix(function)
                 val fqName = when {
-                    containingClass != null -> {
-                        val className = containingClass.fqName?.asString() ?: return
-                        "$className.$name"
-                    }
-                    packageName.isNotEmpty() -> "$packageName.$name"
-                    else -> name
+                    containerFqName != null -> "$containerFqName.$functionName"
+                    packageName.isNotEmpty() -> "$packageName.$functionName"
+                    else -> functionName
                 }
                 
                 declarations.add(Declaration(
@@ -183,14 +221,15 @@ class SourceAnalyzer {
                 // Skip local properties
                 if (property.isLocal) return
                 
-                val containingClass = property.parent?.parent as? KtClassOrObject
+                // Check if it's an extension property - include receiver type in fqName
+                val receiverType = property.receiverTypeReference?.text
+                val propertyName = if (receiverType != null) "$receiverType.$name" else name
+                
+                val containerFqName = getContainingFqNamePrefix(property)
                 val fqName = when {
-                    containingClass != null -> {
-                        val className = containingClass.fqName?.asString() ?: return
-                        "$className.$name"
-                    }
-                    packageName.isNotEmpty() -> "$packageName.$name"
-                    else -> name
+                    containerFqName != null -> "$containerFqName.$propertyName"
+                    packageName.isNotEmpty() -> "$packageName.$propertyName"
+                    else -> propertyName
                 }
                 
                 declarations.add(Declaration(
@@ -202,6 +241,23 @@ class SourceAnalyzer {
                     filePath = filePath,
                     line = ktFile.getLineNumber(property.textOffset) + 1,
                     hasPackagePrivateAnnotation = property.hasPackagePrivateAnnotation()
+                ))
+            }
+            
+            override fun visitTypeAlias(typeAlias: KtTypeAlias) {
+                super.visitTypeAlias(typeAlias)
+                val name = typeAlias.name ?: return
+                val fqName = if (packageName.isNotEmpty()) "$packageName.$name" else name
+                
+                declarations.add(Declaration(
+                    fqName = fqName,
+                    packageName = packageName,
+                    name = name,
+                    kind = DeclarationKind.TYPEALIAS,
+                    visibility = typeAlias.visibilityModifier(),
+                    filePath = filePath,
+                    line = ktFile.getLineNumber(typeAlias.textOffset) + 1,
+                    hasPackagePrivateAnnotation = typeAlias.hasPackagePrivateAnnotation()
                 ))
             }
         })
@@ -291,10 +347,12 @@ class SourceAnalyzer {
                 super.visitTypeReference(typeReference)
                 // Handle type references like: val x: Helper, fun foo(): Helper
                 val typeText = typeReference.text
-                // Remove nullability markers and generics for lookup
-                val simpleName = typeText.replace("?", "").substringBefore("<").trim()
+                // Remove nullability markers for lookup
+                val cleanType = typeText.replace("?", "").trim()
                 
-                val fqName = resolveToFqName(simpleName, imports, starImportPackages, callerPackage, knownDeclarations)
+                // Handle the main type (before generics)
+                val mainType = cleanType.substringBefore("<").trim()
+                val fqName = resolveToFqName(mainType, imports, starImportPackages, callerPackage, knownDeclarations)
                 if (fqName != null && fqName in knownDeclarations) {
                     usages.add(Usage(
                         targetFqName = fqName,
@@ -303,8 +361,95 @@ class SourceAnalyzer {
                         line = ktFile.getLineNumber(typeReference.textOffset) + 1
                     ))
                 }
+                
+                // Handle generic type parameters: List<Helper>, Map<String, Helper>
+                if (cleanType.contains("<")) {
+                    val genericsPart = cleanType.substringAfter("<").substringBeforeLast(">")
+                    // Split by comma, but be careful with nested generics
+                    extractTypeNames(genericsPart).forEach { typeName ->
+                        val genericFqName = resolveToFqName(typeName, imports, starImportPackages, callerPackage, knownDeclarations)
+                        if (genericFqName != null && genericFqName in knownDeclarations) {
+                            usages.add(Usage(
+                                targetFqName = genericFqName,
+                                callerPackage = callerPackage,
+                                filePath = filePath,
+                                line = ktFile.getLineNumber(typeReference.textOffset) + 1
+                            ))
+                        }
+                    }
+                }
+            }
+            
+            override fun visitSuperTypeList(list: KtSuperTypeList) {
+                super.visitSuperTypeList(list)
+                // Handle inheritance: class Foo : BaseClass(), Interface
+                for (entry in list.entries) {
+                    val typeRef = entry.typeReference ?: continue
+                    val typeText = typeRef.text.replace("?", "").substringBefore("<").trim()
+                    
+                    val fqName = resolveToFqName(typeText, imports, starImportPackages, callerPackage, knownDeclarations)
+                    if (fqName != null && fqName in knownDeclarations) {
+                        usages.add(Usage(
+                            targetFqName = fqName,
+                            callerPackage = callerPackage,
+                            filePath = filePath,
+                            line = ktFile.getLineNumber(entry.textOffset) + 1
+                        ))
+                    }
+                }
+            }
+            
+            override fun visitAnnotationEntry(annotationEntry: KtAnnotationEntry) {
+                super.visitAnnotationEntry(annotationEntry)
+                // Handle annotation usage: @MyAnnotation
+                val annotationName = annotationEntry.shortName?.asString() ?: return
+                
+                val fqName = resolveToFqName(annotationName, imports, starImportPackages, callerPackage, knownDeclarations)
+                if (fqName != null && fqName in knownDeclarations) {
+                    usages.add(Usage(
+                        targetFqName = fqName,
+                        callerPackage = callerPackage,
+                        filePath = filePath,
+                        line = ktFile.getLineNumber(annotationEntry.textOffset) + 1
+                    ))
+                }
             }
         })
+    }
+    
+    /**
+     * Extracts type names from a generic parameter string like "String, Helper" or "K, V"
+     * Handles nested generics like "List<Helper>, Map<String, Other>"
+     */
+    private fun extractTypeNames(generics: String): List<String> {
+        val result = mutableListOf<String>()
+        var depth = 0
+        var current = StringBuilder()
+        
+        for (char in generics) {
+            when {
+                char == '<' -> {
+                    depth++
+                    current.append(char)
+                }
+                char == '>' -> {
+                    depth--
+                    current.append(char)
+                }
+                char == ',' && depth == 0 -> {
+                    val typeName = current.toString().trim().substringBefore("<").replace("?", "").trim()
+                    if (typeName.isNotEmpty()) result.add(typeName)
+                    current = StringBuilder()
+                }
+                else -> current.append(char)
+            }
+        }
+        
+        // Add the last type
+        val lastType = current.toString().trim().substringBefore("<").replace("?", "").trim()
+        if (lastType.isNotEmpty()) result.add(lastType)
+        
+        return result
     }
     
     private fun resolveToFqName(

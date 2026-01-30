@@ -13,4 +13,11 @@ class InternalService {
         val util = utilityFunction()
         return "Result: $result, Util: $util"
     }
+    
+    // Uses the enum, sealed class and typealias
+    fun getStatus(): InternalStatus = InternalStatus.ACTIVE
+    
+    fun process(): InternalResult = InternalResult.Success(42)
+    
+    fun withCallback(cb: InternalCallback) = cb(42)
 }

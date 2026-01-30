@@ -71,6 +71,10 @@ data class Candidate(
             DeclarationKind.OBJECT -> "object"
             DeclarationKind.FUNCTION -> "function"
             DeclarationKind.PROPERTY -> "property"
+            DeclarationKind.ENUM_CLASS -> "enum class"
+            DeclarationKind.SEALED_CLASS -> "sealed class"
+            DeclarationKind.SEALED_INTERFACE -> "sealed interface"
+            DeclarationKind.TYPEALIAS -> "typealias"
         }
         val visibilityStr = when (declaration.visibility) {
             Visibility.PUBLIC -> "public"
