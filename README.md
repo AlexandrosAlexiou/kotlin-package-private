@@ -66,6 +66,7 @@ import com.example.internal.Helper  // ❌ Compilation error!
 - `@PackagePrivate` annotation for classes, functions, properties, and constructors
 - Compile-time enforcement - access violations are reported as compilation errors
 - Optional `scope` parameter to override the package (useful for generated code)
+- **Candidate analyzer** - finds declarations that could benefit from `@PackagePrivate`
 - Works with both **Gradle** and **Maven**
 - Supports Kotlin 2.3.0+ (K2 compiler)
 
@@ -266,6 +267,53 @@ import dev.packageprivate.PackagePrivate
 // Accessible from com.example.api instead of com.example.generated
 @PackagePrivate(scope = "com.example.api")
 class GeneratedHelper
+```
+
+## Finding Candidates for @PackagePrivate
+
+The plugin includes an analyzer that scans your codebase to find declarations that are good candidates for `@PackagePrivate` - public or internal declarations that are only used within their own package.
+
+### Running the Analyzer
+
+```bash
+./gradlew analyzePackagePrivateCandidates
+```
+
+### Example Output
+
+```
+═══════════════════════════════════════════════════════════════
+  @PackagePrivate Candidates Report
+═══════════════════════════════════════════════════════════════
+
+Found 3 declaration(s) that could benefit from @PackagePrivate:
+
+Package: com.example.internal
+────────────────────────────────────────────────────────────────
+com.example.internal.Helper (class)
+  └── Only used in package: com.example.internal
+  └── Current visibility: public
+  └── Location: Helper.kt:5
+
+com.example.internal.utilityFunction (function)
+  └── Only used in package: com.example.internal
+  └── Current visibility: internal
+  └── Location: Utils.kt:10
+
+═══════════════════════════════════════════════════════════════
+  Summary: 3 candidates found
+═══════════════════════════════════════════════════════════════
+```
+
+### Configuration
+
+```kotlin
+// build.gradle.kts
+packagePrivate {
+    includePublic = true      // Suggest for public declarations (default: true)
+    includeInternal = true    // Suggest for internal declarations (default: true)
+    outputFile = file("build/reports/candidates.txt")  // Optional output file
+}
 ```
 
 ## Platform Support
