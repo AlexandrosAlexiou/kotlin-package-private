@@ -27,6 +27,9 @@ class CandidateFinder(
             // Skip if already has @PackagePrivate
             if (declaration.hasPackagePrivateAnnotation) return@mapNotNull null
             
+            // Skip if containing class has @PackagePrivate (member is already implicitly package-private)
+            if (declaration.containingClassHasPackagePrivate) return@mapNotNull null
+            
             // Skip if private (already restricted)
             if (declaration.visibility == Visibility.PRIVATE) return@mapNotNull null
             

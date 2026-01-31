@@ -23,7 +23,8 @@ data class Declaration(
     val visibility: Visibility,
     val filePath: String,
     val line: Int,
-    val hasPackagePrivateAnnotation: Boolean
+    val hasPackagePrivateAnnotation: Boolean,
+    val containingClassHasPackagePrivate: Boolean = false
 )
 
 enum class DeclarationKind {
@@ -127,6 +128,17 @@ class SourceAnalyzer {
                 return null
             }
             
+            private fun hasContainingClassWithPackagePrivate(element: org.jetbrains.kotlin.com.intellij.psi.PsiElement): Boolean {
+                var parent = element.parent
+                while (parent != null) {
+                    if (parent is KtClassOrObject && parent.hasPackagePrivateAnnotation()) {
+                        return true
+                    }
+                    parent = parent.parent
+                }
+                return false
+            }
+            
             override fun visitClass(klass: KtClass) {
                 super.visitClass(klass)
                 val name = klass.name ?: return
@@ -160,7 +172,8 @@ class SourceAnalyzer {
                     visibility = klass.visibilityModifier(),
                     filePath = filePath,
                     line = ktFile.getLineNumber(klass.textOffset) + 1,
-                    hasPackagePrivateAnnotation = klass.hasPackagePrivateAnnotation()
+                    hasPackagePrivateAnnotation = klass.hasPackagePrivateAnnotation(),
+                    containingClassHasPackagePrivate = hasContainingClassWithPackagePrivate(klass)
                 ))
             }
             
@@ -187,7 +200,8 @@ class SourceAnalyzer {
                     visibility = declaration.visibilityModifier(),
                     filePath = filePath,
                     line = ktFile.getLineNumber(declaration.textOffset) + 1,
-                    hasPackagePrivateAnnotation = declaration.hasPackagePrivateAnnotation()
+                    hasPackagePrivateAnnotation = declaration.hasPackagePrivateAnnotation(),
+                    containingClassHasPackagePrivate = hasContainingClassWithPackagePrivate(declaration)
                 ))
             }
             
@@ -216,7 +230,8 @@ class SourceAnalyzer {
                     visibility = function.visibilityModifier(),
                     filePath = filePath,
                     line = ktFile.getLineNumber(function.textOffset) + 1,
-                    hasPackagePrivateAnnotation = function.hasPackagePrivateAnnotation()
+                    hasPackagePrivateAnnotation = function.hasPackagePrivateAnnotation(),
+                    containingClassHasPackagePrivate = hasContainingClassWithPackagePrivate(function)
                 ))
             }
             
@@ -245,7 +260,8 @@ class SourceAnalyzer {
                     visibility = property.visibilityModifier(),
                     filePath = filePath,
                     line = ktFile.getLineNumber(property.textOffset) + 1,
-                    hasPackagePrivateAnnotation = property.hasPackagePrivateAnnotation()
+                    hasPackagePrivateAnnotation = property.hasPackagePrivateAnnotation(),
+                    containingClassHasPackagePrivate = hasContainingClassWithPackagePrivate(property)
                 ))
             }
             
@@ -262,7 +278,8 @@ class SourceAnalyzer {
                     visibility = typeAlias.visibilityModifier(),
                     filePath = filePath,
                     line = ktFile.getLineNumber(typeAlias.textOffset) + 1,
-                    hasPackagePrivateAnnotation = typeAlias.hasPackagePrivateAnnotation()
+                    hasPackagePrivateAnnotation = typeAlias.hasPackagePrivateAnnotation(),
+                    containingClassHasPackagePrivate = hasContainingClassWithPackagePrivate(typeAlias)
                 ))
             }
         })
@@ -287,6 +304,36 @@ class SourceAnalyzer {
                 imports[simpleName] = importedFqName
             }
         }
+        
+        // Track local variable types: varName -> typeFqName
+        val localVarTypes = mutableMapOf<String, String>()
+        
+        // First pass: collect variable declarations and their types
+        ktFile.accept(object : KtTreeVisitorVoid() {
+            override fun visitProperty(property: KtProperty) {
+                super.visitProperty(property)
+                val varName = property.name ?: return
+                
+                // Try to get type from explicit type annotation
+                val typeRef = property.typeReference?.text?.replace("?", "")?.substringBefore("<")?.trim()
+                if (typeRef != null) {
+                    val typeFqName = resolveToFqName(typeRef, imports, starImportPackages, callerPackage, knownDeclarations)
+                    if (typeFqName != null) {
+                        localVarTypes[varName] = typeFqName
+                    }
+                }
+                
+                // Try to infer type from initializer (e.g., val api = PublicApi())
+                val initializer = property.initializer
+                if (initializer is KtCallExpression) {
+                    val callee = initializer.calleeExpression?.text ?: return
+                    val typeFqName = resolveToFqName(callee, imports, starImportPackages, callerPackage, knownDeclarations)
+                    if (typeFqName != null) {
+                        localVarTypes[varName] = typeFqName
+                    }
+                }
+            }
+        })
         
         ktFile.accept(object : KtTreeVisitorVoid() {
             override fun visitCallExpression(expression: KtCallExpression) {
@@ -337,7 +384,7 @@ class SourceAnalyzer {
                     else -> expression.text
                 }
                 
-                // Check if the qualified name matches a known declaration
+                // Check if the qualified name matches a known declaration (e.g., com.example.Helper)
                 if (qualifiedName in knownDeclarations) {
                     usages.add(Usage(
                         targetFqName = qualifiedName,
@@ -345,6 +392,25 @@ class SourceAnalyzer {
                         filePath = filePath,
                         line = ktFile.getLineNumber(expression.textOffset) + 1
                     ))
+                }
+                
+                // Handle method calls on instances: api.execute() where api is of type PublicApi
+                // Check if receiver is a variable we know the type of
+                if (selectorExpr is KtCallExpression) {
+                    val receiverName = receiverExpr.text
+                    val receiverTypeFqName = localVarTypes[receiverName]
+                    if (receiverTypeFqName != null) {
+                        val methodName = selectorExpr.calleeExpression?.text ?: return
+                        val methodFqName = "$receiverTypeFqName.$methodName"
+                        if (methodFqName in knownDeclarations) {
+                            usages.add(Usage(
+                                targetFqName = methodFqName,
+                                callerPackage = callerPackage,
+                                filePath = filePath,
+                                line = ktFile.getLineNumber(expression.textOffset) + 1
+                            ))
+                        }
+                    }
                 }
             }
             
