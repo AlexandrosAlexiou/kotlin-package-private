@@ -10,7 +10,8 @@ package dev.packageprivate
     AnnotationTarget.CLASS,
     AnnotationTarget.FUNCTION,
     AnnotationTarget.PROPERTY,
-    AnnotationTarget.CONSTRUCTOR
+    AnnotationTarget.CONSTRUCTOR,
+    AnnotationTarget.TYPEALIAS
 )
 @Retention(AnnotationRetention.BINARY)
 annotation class PackagePrivate(

@@ -6,3 +6,6 @@ import dev.packageprivate.PackagePrivate
 class Helper {
     @PackagePrivate fun work() = "done"
 }
+
+@PackagePrivate
+typealias InternalHandler = (Int) -> String

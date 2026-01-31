@@ -36,6 +36,9 @@ class GradleIntegrationTest {
         val result = runGradle(tempDir, "build")
         assertTrue(result.exitCode != 0, "Build should fail")
         assertContains(result.output, "package-private")
+        // Should fail for both class and typealias access
+        assertContains(result.output, "Helper")
+        assertContains(result.output, "InternalHandler")
     }
 
     @Test

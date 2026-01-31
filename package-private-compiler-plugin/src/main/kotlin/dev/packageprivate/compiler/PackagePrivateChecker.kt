@@ -9,6 +9,8 @@ import org.jetbrains.kotlin.fir.analysis.checkers.declaration.DeclarationChecker
 import org.jetbrains.kotlin.fir.analysis.checkers.declaration.FirCallableDeclarationChecker
 import org.jetbrains.kotlin.fir.analysis.checkers.expression.ExpressionCheckers
 import org.jetbrains.kotlin.fir.analysis.checkers.expression.FirCallChecker
+import org.jetbrains.kotlin.fir.analysis.checkers.type.FirResolvedTypeRefChecker
+import org.jetbrains.kotlin.fir.analysis.checkers.type.TypeCheckers
 import org.jetbrains.kotlin.fir.analysis.extensions.FirAdditionalCheckersExtension
 import org.jetbrains.kotlin.fir.declarations.FirCallableDeclaration
 import org.jetbrains.kotlin.fir.declarations.FirFile
@@ -18,12 +20,15 @@ import org.jetbrains.kotlin.fir.expressions.FirLiteralExpression
 import org.jetbrains.kotlin.fir.expressions.FirResolvable
 import org.jetbrains.kotlin.fir.references.toResolvedCallableSymbol
 import org.jetbrains.kotlin.fir.resolve.toRegularClassSymbol
+import org.jetbrains.kotlin.fir.resolve.toTypeAliasSymbol
 import org.jetbrains.kotlin.fir.symbols.SymbolInternals
 import org.jetbrains.kotlin.fir.symbols.impl.FirCallableSymbol
 import org.jetbrains.kotlin.fir.symbols.impl.FirConstructorSymbol
 import org.jetbrains.kotlin.fir.types.FirResolvedTypeRef
 import org.jetbrains.kotlin.fir.types.classId
 import org.jetbrains.kotlin.fir.types.coneType
+import org.jetbrains.kotlin.fir.types.toRegularClassSymbol
+import org.jetbrains.kotlin.fir.types.abbreviatedTypeOrSelf
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.FqName
 
@@ -35,6 +40,11 @@ class PackagePrivateChecker(session: FirSession) : FirAdditionalCheckersExtensio
     override val declarationCheckers: DeclarationCheckers = object : DeclarationCheckers() {
         override val callableDeclarationCheckers: Set<FirCallableDeclarationChecker> = 
             setOf(RedundantPackagePrivateChecker)
+    }
+    
+    override val typeCheckers: TypeCheckers = object : TypeCheckers() {
+        override val resolvedTypeRefCheckers: Set<FirResolvedTypeRefChecker> = 
+            setOf(PackagePrivateTypeAliasChecker)
     }
 }
 
@@ -144,5 +154,46 @@ private object RedundantPackagePrivateChecker : FirCallableDeclarationChecker(Mp
                 callableId.callableName.asString()
             )
         }
+    }
+}
+
+@OptIn(SymbolInternals::class)
+private object PackagePrivateTypeAliasChecker : FirResolvedTypeRefChecker(MppCheckerKind.Common) {
+    context(ctx: CheckerContext, reporter: DiagnosticReporter)
+    override fun check(typeRef: FirResolvedTypeRef) {
+        val fileSymbol = ctx.containingFileSymbol ?: return
+        val callerPackage = fileSymbol.fir.packageDirective.packageFqName
+        
+        // Check if the type is a typealias
+        val coneType = typeRef.coneType.abbreviatedTypeOrSelf
+        @Suppress("DEPRECATION")
+        val typeAliasSymbol = coneType.toTypeAliasSymbol(ctx.session) ?: return
+        
+        // Check if the typealias has @PackagePrivate
+        val annotation = typeAliasSymbol.annotations.firstOrNull { it.hasPackagePrivateClassId() } ?: return
+        
+        val scopeOverride = extractScopeFromAnnotation(annotation)
+        val targetPackage = if (scopeOverride.isNotEmpty()) {
+            FqName(scopeOverride)
+        } else {
+            typeAliasSymbol.classId.packageFqName
+        }
+        
+        if (callerPackage != targetPackage) {
+            val source = typeRef.source ?: return
+            reporter.reportOn(
+                source,
+                PackagePrivateErrors.PACKAGE_PRIVATE_ACCESS,
+                typeAliasSymbol.classId.asSingleFqName().asString(),
+                targetPackage.asString()
+            )
+        }
+    }
+    
+    private fun extractScopeFromAnnotation(annotation: FirAnnotation): String {
+        val argument = annotation.argumentMapping.mapping.entries.firstOrNull {
+            it.key.asString() == "scope"
+        }?.value
+        return (argument as? FirLiteralExpression)?.value as? String ?: ""
     }
 }
