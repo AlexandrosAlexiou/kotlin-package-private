@@ -5,10 +5,14 @@ plugins {
 
 kotlin {
   jvmToolchain(21)
+  compilerOptions {
+    // Opt-in to K1 API until K2-compatible standalone PSI parsing is available
+    freeCompilerArgs.add("-opt-in=org.jetbrains.kotlin.K1Deprecation")
+  }
 }
 
 dependencies {
-  compileOnly("org.jetbrains.kotlin:kotlin-gradle-plugin-api:2.3.0")
+  compileOnly("org.jetbrains.kotlin:kotlin-gradle-plugin:2.3.0")
   // For Kotlin PSI parsing in the analyzer
   implementation("org.jetbrains.kotlin:kotlin-compiler-embeddable:2.3.0")
   

@@ -1,5 +1,6 @@
 plugins {
-  kotlin("multiplatform")
+    kotlin("multiplatform") version "2.3.0"
+    id("dev.packageprivate.package-private")
 }
 
 kotlin {
@@ -12,12 +13,20 @@ kotlin {
   sourceSets {
     val commonMain by getting {
       dependencies {
-        implementation(project(":package-private-annotations"))
+        // Dependencies are automatically added by the plugin, but we can still declare them explicitly
       }
     }
   }
 }
 
-dependencies {
-  kotlinCompilerPluginClasspath(project(":package-private-compiler-plugin"))
-}
+// The plugin automatically:
+// - Adds the package-private-annotations dependency
+// - Applies the compiler plugin for @PackagePrivate enforcement  
+// - Registers the analyzePackagePrivateCandidates task
+//
+// Run: ./gradlew analyzePackagePrivateCandidates
+//
+// The example source files in this module demonstrate:
+// - Calculator.kt: Public class used within same package
+// - InternalHelper.kt: Package-private helper used only in same package
+// - Main.kt: Uses the public API from different package

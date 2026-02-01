@@ -6,11 +6,11 @@ include(
   ":package-private-gradle-plugin",
   ":integration-tests",
   ":examples:java-gradle",
-  ":examples:multiplatform-js",
 )
 
 project(":examples:java-gradle").name = "example-java-gradle"
-project(":examples:multiplatform-js").name = "example-multiplatform-js"
 
-// example-gradle is a standalone build that uses the plugin via includeBuild
-// Run it with: cd examples/gradle && ./gradlew analyzePackagePrivateCandidates
+// example-gradle and example-multiplatform-js are standalone builds that use the plugin via includeBuild
+// Run them with:
+//   cd examples/gradle && ./gradlew analyzePackagePrivateCandidates
+//   cd examples/multiplatform-js && ./gradlew analyzePackagePrivateCandidates

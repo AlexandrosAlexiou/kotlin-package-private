@@ -1091,4 +1091,73 @@ class SourceAnalyzerTest {
             analyzer.dispose()
         }
     }
+    
+    @Test
+    fun `can parse multiplatform common Kotlin code`() {
+        // Create multiplatform-style source files
+        val commonMain = File(tempDir, "src/commonMain/kotlin/com/example").apply { mkdirs() }
+        
+        File(commonMain, "Calculator.kt").writeText("""
+            package com.example
+            
+            class Calculator {
+                fun add(a: Int, b: Int): Int = a + b
+            }
+        """.trimIndent())
+        
+        File(commonMain, "Helper.kt").writeText("""
+            package com.example
+            
+            internal class Helper {
+                fun compute(): String = "computed"
+            }
+        """.trimIndent())
+        
+        val analyzer = SourceAnalyzer()
+        try {
+            val result = analyzer.analyze(tempDir.walkTopDown().filter { it.extension == "kt" }.toList())
+            
+            // Should find both classes
+            val calculator = result.declarations.find { it.name == "Calculator" }
+            assertNotNull(calculator, "Should find Calculator class")
+            assertEquals("com.example", calculator.packageName)
+            
+            val helper = result.declarations.find { it.name == "Helper" }
+            assertNotNull(helper, "Should find Helper class")
+            assertEquals(Visibility.INTERNAL, helper.visibility)
+        } finally {
+            analyzer.dispose()
+        }
+    }
+    
+    @Test
+    fun `can parse all multiplatform targets`() {
+        // Create various multiplatform source sets
+        val commonMain = File(tempDir, "src/commonMain/kotlin/com/example").apply { mkdirs() }
+        val jvmMain = File(tempDir, "src/jvmMain/kotlin/com/example").apply { mkdirs() }
+        val jsMain = File(tempDir, "src/jsMain/kotlin/com/example").apply { mkdirs() }
+        val nativeMain = File(tempDir, "src/nativeMain/kotlin/com/example").apply { mkdirs() }
+        val iosMain = File(tempDir, "src/iosMain/kotlin/com/example").apply { mkdirs() }
+        
+        File(commonMain, "Common.kt").writeText("package com.example\nclass CommonClass")
+        File(jvmMain, "Jvm.kt").writeText("package com.example\nclass JvmClass")
+        File(jsMain, "Js.kt").writeText("package com.example\nclass JsClass")
+        File(nativeMain, "Native.kt").writeText("package com.example\nclass NativeClass")
+        File(iosMain, "Ios.kt").writeText("package com.example\nclass IosClass")
+        
+        val analyzer = SourceAnalyzer()
+        try {
+            val result = analyzer.analyze(tempDir.walkTopDown().filter { it.extension == "kt" }.toList())
+            
+            // Should find all 5 classes
+            assertEquals(5, result.declarations.size, "Should find all 5 classes")
+            assertTrue(result.declarations.any { it.name == "CommonClass" })
+            assertTrue(result.declarations.any { it.name == "JvmClass" })
+            assertTrue(result.declarations.any { it.name == "JsClass" })
+            assertTrue(result.declarations.any { it.name == "NativeClass" })
+            assertTrue(result.declarations.any { it.name == "IosClass" })
+        } finally {
+            analyzer.dispose()
+        }
+    }
 }
