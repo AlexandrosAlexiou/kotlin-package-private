@@ -9,8 +9,3 @@ include(
 )
 
 project(":examples:java-gradle").name = "example-java-gradle"
-
-// example-gradle and example-multiplatform-js are standalone builds that use the plugin via includeBuild
-// Run them with:
-//   cd examples/gradle && ./gradlew analyzePackagePrivateCandidates
-//   cd examples/multiplatform-js && ./gradlew analyzePackagePrivateCandidates
