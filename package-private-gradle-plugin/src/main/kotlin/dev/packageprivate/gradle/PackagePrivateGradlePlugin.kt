@@ -26,6 +26,10 @@ open class PackagePrivateExtension {
 }
 
 class PackagePrivateGradlePlugin : KotlinCompilerPluginSupportPlugin {
+    companion object {
+        private const val PLUGIN_VERSION = "1.2.0"
+    }
+    
     override fun apply(target: Project) {
         // Create extension
         val extension = target.extensions.create("packagePrivate", PackagePrivateExtension::class.java)
@@ -37,13 +41,13 @@ class PackagePrivateGradlePlugin : KotlinCompilerPluginSupportPlugin {
             if (kotlinExt is KotlinMultiplatformExtension) {
                 // Multiplatform project - add to commonMain
                 kotlinExt.sourceSets.findByName("commonMain")?.dependencies {
-                    implementation("com.acme:package-private-annotations:${target.rootProject.version}")
+                    implementation("dev.packageprivate:package-private-annotations:$PLUGIN_VERSION")
                 }
             } else {
                 // JVM project - add to implementation configuration
                 target.dependencies.add(
                     "implementation",
-                    "com.acme:package-private-annotations:${target.rootProject.version}",
+                    "dev.packageprivate:package-private-annotations:$PLUGIN_VERSION",
                 )
             }
             
@@ -105,15 +109,19 @@ class PackagePrivateGradlePlugin : KotlinCompilerPluginSupportPlugin {
         }
     }
 
-    override fun isApplicable(kotlinCompilation: KotlinCompilation<*>): Boolean = true
+    override fun isApplicable(kotlinCompilation: KotlinCompilation<*>): Boolean {
+        // Only apply to JVM targets (not JS or Native)
+        // The plugin uses JVM-specific bytecode generation
+        return kotlinCompilation.platformType.toString() == "jvm"
+    }
 
     override fun getCompilerPluginId(): String = "dev.packageprivate.package-private"
 
     override fun getPluginArtifact(): SubpluginArtifact =
         SubpluginArtifact(
-            groupId = "com.acme",
+            groupId = "dev.packageprivate",
             artifactId = "package-private-compiler-plugin",
-            version = "0.1.0",
+            version = PLUGIN_VERSION,
         )
 
     override fun applyToCompilation(

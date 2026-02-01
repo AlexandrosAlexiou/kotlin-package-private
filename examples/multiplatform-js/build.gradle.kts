@@ -3,6 +3,13 @@ plugins {
     id("dev.packageprivate.package-private")
 }
 
+version = "1.2.0"
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
 kotlin {
   js {
     browser()

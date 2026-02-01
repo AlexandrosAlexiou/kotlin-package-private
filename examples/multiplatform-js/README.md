@@ -53,7 +53,7 @@ The gradle plugin's `analyzePackagePrivateCandidates` task **automatically disco
 - `tvosMain`, `watchosMain`
 - And any other configured targets
 
-The SourceAnalyzer uses PSI parsing which works on any Kotlin syntax regardless of target platform. No configuration needed when adding new targets!
+The SourceAnalyzer uses PSI parsing which works on any Kotlin syntax regardless of target platform. No configuration needed when adding new targets.
 
 ## Platform Notes
 
