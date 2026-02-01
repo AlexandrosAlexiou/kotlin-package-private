@@ -31,9 +31,16 @@ kotlin {
     }
 }
 
+// Note: The compiler plugin must be added explicitly for multiplatform projects
+// The Gradle plugin's KotlinCompilerPluginSupportPlugin mechanism doesn't work reliably
+// for non-JVM targets, so we use kotlinCompilerPluginClasspath directly.
+dependencies {
+    kotlinCompilerPluginClasspath("dev.packageprivate:package-private-compiler-plugin:1.2.0")
+}
+
 // The plugin automatically:
 // - Adds the package-private-annotations dependency
-// - Applies the compiler plugin for @PackagePrivate enforcement
+// - Applies the compiler plugin for @PackagePrivate enforcement (via kotlinCompilerPluginClasspath above)
 // - Registers the analyzePackagePrivateCandidates task
 //
 // Platform support:
@@ -44,4 +51,4 @@ kotlin {
 // - Calculator.kt: Public class used within same package
 // - InternalHelper.kt: Package-private helper used only in same package
 // - Main.kt: Uses the public API from different package
-// - PublicApi.kt: Contains violations that should fail compilation
+// - PublicApi.kt: Contains commented violations - uncomment to see errors
