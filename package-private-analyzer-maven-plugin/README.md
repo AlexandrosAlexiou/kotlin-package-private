@@ -2,7 +2,7 @@
 
 This Maven plugin analyzes Kotlin code to find candidates for the `@PackagePrivate` annotation.
 
-**Version:** 1.0.0  
+**Version:** 1.0.0
 **Group ID:** `dev.packageprivate.analyzer`
 
 ## Building
@@ -60,7 +60,7 @@ mvn verify
 Available parameters:
 
 - `includePublic` (default: `true`) - Include public declarations in candidate analysis
-- `includeInternal` (default: `true`) - Include internal declarations in candidate analysis  
+- `includeInternal` (default: `true`) - Include internal declarations in candidate analysis
 - `outputFile` (default: `${project.build.directory}/reports/package-private-candidates.txt`) - Output file path
 - `sourceDirectories` - Custom source directories (defaults to `src/main/kotlin` and `src/main/java`)
 
@@ -78,3 +78,7 @@ Example configuration:
     </configuration>
 </plugin>
 ```
+
+## Example
+
+See the [examples/maven](../../examples/maven) directory for a complete working example.
