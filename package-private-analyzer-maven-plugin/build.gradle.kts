@@ -33,9 +33,9 @@ val generatePluginDescriptor by tasks.registering {
 <plugin>
     <name>Package Private Analyzer Maven Plugin</name>
     <description>Maven plugin for analyzing package-private candidates in Kotlin code</description>
-    <groupId>dev.packageprivate</groupId>
+    <groupId>dev.packageprivate.analyzer</groupId>
     <artifactId>package-private-analyzer-maven-plugin</artifactId>
-    <version>1.2.0</version>
+    <version>${project.version}</version>
     <goalPrefix>package-private</goalPrefix>
     <isolatedRealm>false</isolatedRealm>
     <inheritedByDefault>true</inheritedByDefault>
@@ -102,10 +102,10 @@ val generatePluginDescriptor by tasks.registering {
     </mojos>
     <dependencies>
         <dependency>
-            <groupId>dev.packageprivate</groupId>
+            <groupId>dev.packageprivate.analyzer</groupId>
             <artifactId>package-private-analyzer-core</artifactId>
             <type>jar</type>
-            <version>1.2.0</version>
+            <version>${project.version}</version>
         </dependency>
     </dependencies>
 </plugin>

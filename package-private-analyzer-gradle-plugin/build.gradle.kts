@@ -23,6 +23,8 @@ gradlePlugin {
     create("packagePrivateAnalyzer") {
       id = "dev.packageprivate.analyzer"
       implementationClass = "dev.packageprivate.analyzer.gradle.PackagePrivateAnalyzerGradlePlugin"
+      displayName = "Package Private Analyzer"
+      description = "Analyzes Kotlin code to find candidates for @PackagePrivate annotation"
     }
   }
 }

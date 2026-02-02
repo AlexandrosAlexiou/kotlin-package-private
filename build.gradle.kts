@@ -3,16 +3,22 @@ plugins {
   kotlin("multiplatform") version "2.3.0" apply false
 }
 
+// Main package-private plugins (compiler plugin)
 group = "dev.packageprivate"
 version = "1.2.0"
+
+// Analyzer plugins have separate versioning
+val analyzerVersion = "1.0.0"
 
 repositories {
   mavenCentral()
 }
 
 subprojects {
-  group = rootProject.group
-  version = rootProject.version
+  // Set group and version based on project type
+  val isAnalyzer = project.name.contains("analyzer")
+  group = if (isAnalyzer) "dev.packageprivate.analyzer" else rootProject.group
+  version = if (isAnalyzer) analyzerVersion else rootProject.version
 
   repositories {
     mavenCentral()
@@ -34,13 +40,16 @@ subprojects {
           publications {
             create<MavenPublication>("maven") {
               from(components["kotlin"])
-              groupId = rootProject.group.toString()
+              groupId = project.group.toString()
               artifactId = project.name
-              version = rootProject.version.toString()
+              version = project.version.toString()
 
               pom {
                 name.set(project.name)
-                description.set("Kotlin package-private visibility compiler plugin")
+                description.set(
+                  if (isAnalyzer) "Analyzer for package-private candidates in Kotlin code"
+                  else "Kotlin package-private visibility compiler plugin"
+                )
                 url.set("https://github.com/AlexandrosAlexiou/package-private")
 
                 licenses {
@@ -68,7 +77,7 @@ subprojects {
         }
 
         repositories {
-          // GitHub Packages
+          // GitHub Packages - same repo, different group IDs create separate packages
           maven {
             name = "GitHubPackages"
             url = uri("https://maven.pkg.github.com/AlexandrosAlexiou/package-private")

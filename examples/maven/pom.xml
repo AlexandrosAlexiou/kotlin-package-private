@@ -57,9 +57,9 @@
             </plugin>
             <!-- Package Private Analyzer Plugin -->
             <plugin>
-                <groupId>dev.packageprivate</groupId>
+                <groupId>dev.packageprivate.analyzer</groupId>
                 <artifactId>package-private-analyzer-maven-plugin</artifactId>
-                <version>1.2.0</version>
+                <version>1.0.0</version>
                 <executions>
                     <execution>
                         <id>analyze-package-private</id>
