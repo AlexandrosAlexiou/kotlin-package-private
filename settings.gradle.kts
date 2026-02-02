@@ -8,7 +8,4 @@ include(
   ":package-private-analyzer-gradle-plugin",
   ":package-private-analyzer-maven-plugin",
   ":integration-tests",
-  ":examples:java-gradle",
 )
-
-project(":examples:java-gradle").name = "example-java-gradle"
