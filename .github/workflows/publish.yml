@@ -35,11 +35,21 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_ACTOR: ${{ github.actor }}
 
-      - name: Upload JARs to Release
+      - name: Upload Compiler Plugin JARs to Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
             package-private-annotations/build/libs/*.jar
             package-private-compiler-plugin/build/libs/*.jar
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Analyzer Plugin JARs to Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            package-private-analyzer-core/build/libs/*.jar
+            package-private-analyzer-gradle-plugin/build/libs/*.jar
+            package-private-analyzer-maven-plugin/build/libs/*.jar
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
