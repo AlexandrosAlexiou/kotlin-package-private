@@ -24,7 +24,8 @@ subprojects {
   // Apply maven-publish to library modules (not examples, integration-tests, or gradle-plugin)
   if (!project.path.startsWith(":examples") && 
       project.name != "integration-tests" && 
-      project.name != "package-private-gradle-plugin") {
+      project.name != "package-private-gradle-plugin" &&
+      project.name != "package-private-analyzer-gradle-plugin") {
     apply(plugin = "maven-publish")
 
     afterEvaluate {
