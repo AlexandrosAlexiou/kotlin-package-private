@@ -87,9 +87,10 @@ class AnalyzePackagePrivateCandidatesMojo : AbstractMojo() {
 
         log.info("Analyzing ${kotlinFiles.size} Kotlin files for @PackagePrivate candidates...")
 
+        val projectRoot = mavenProject.basedir
         val analyzer = SourceAnalyzer()
         try {
-            val analysisResult = analyzer.analyze(kotlinFiles)
+            val analysisResult = analyzer.analyze(kotlinFiles, projectRoot)
 
             log.info("Found ${analysisResult.declarations.size} declarations and ${analysisResult.usages.size} usages")
 

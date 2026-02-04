@@ -3,22 +3,19 @@ plugins {
   kotlin("multiplatform") version "2.3.0" apply false
 }
 
-// Main package-private plugins (compiler plugin)
+// Unified version for all components
 group = "dev.packageprivate"
-version = "1.2.0"
-
-// Analyzer plugins have separate versioning
-val analyzerVersion = "1.0.0"
+version = "1.3.0"
 
 repositories {
   mavenCentral()
 }
 
 subprojects {
-  // Set group and version based on project type
+  // Set group based on project type
   val isAnalyzer = project.name.contains("analyzer")
   group = if (isAnalyzer) "dev.packageprivate.analyzer" else rootProject.group
-  version = if (isAnalyzer) analyzerVersion else rootProject.version
+  version = rootProject.version
 
   repositories {
     mavenCentral()

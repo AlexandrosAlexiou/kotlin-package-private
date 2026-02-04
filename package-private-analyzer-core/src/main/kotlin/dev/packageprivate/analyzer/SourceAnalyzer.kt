@@ -82,14 +82,14 @@ class SourceAnalyzer {
     }
 
     /** Analyzes all Kotlin files and returns declarations and usages. */
-    fun analyze(sourceFiles: List<File>): AnalysisResult {
+    fun analyze(sourceFiles: List<File>, projectRoot: File? = null): AnalysisResult {
         val declarations = mutableListOf<Declaration>()
         val usages = mutableListOf<Usage>()
 
         val ktFiles =
             sourceFiles.mapNotNull { file ->
                 if (file.extension == "kt") {
-                    parseKotlinFile(file)
+                    parseKotlinFile(file, projectRoot)
                 } else null
             }
 
@@ -109,10 +109,15 @@ class SourceAnalyzer {
         return AnalysisResult(declarations, usages)
     }
 
-    private fun parseKotlinFile(file: File): KtFile? {
+    private fun parseKotlinFile(file: File, projectRoot: File?): KtFile? {
         return try {
             val content = file.readText()
-            val virtualFile = LightVirtualFile(file.name, KotlinFileType.INSTANCE, content)
+            val filePath = if (projectRoot != null) {
+                file.relativeTo(projectRoot).path
+            } else {
+                file.name
+            }
+            val virtualFile = LightVirtualFile(filePath, KotlinFileType.INSTANCE, content)
             PsiManager.getInstance(environment.project).findFile(virtualFile) as? KtFile
         } catch (e: Exception) {
             null

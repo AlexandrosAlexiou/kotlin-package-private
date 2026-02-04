@@ -51,9 +51,10 @@ abstract class AnalyzePackagePrivateCandidatesTask : DefaultTask() {
         
         logger.lifecycle("Analyzing ${files.size} Kotlin files for @PackagePrivate candidates...")
         
+        val projectRoot = project.rootProject.projectDir
         val analyzer = SourceAnalyzer()
         try {
-            val analysisResult = analyzer.analyze(files.toList())
+            val analysisResult = analyzer.analyze(files.toList(), projectRoot)
             
             logger.lifecycle("Found ${analysisResult.declarations.size} declarations and ${analysisResult.usages.size} usages")
             

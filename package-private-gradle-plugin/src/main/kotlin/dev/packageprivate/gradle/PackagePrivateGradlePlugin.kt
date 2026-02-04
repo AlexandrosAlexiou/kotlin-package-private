@@ -13,7 +13,7 @@ open class PackagePrivateExtension {
 
 class PackagePrivateGradlePlugin : Plugin<Project> {
     companion object {
-        private const val PLUGIN_VERSION = "1.2.0"
+        private const val PLUGIN_VERSION = "1.3.0"
     }
 
     override fun apply(target: Project) {

@@ -2,7 +2,7 @@
 
 This Maven plugin analyzes Kotlin code to find candidates for the `@PackagePrivate` annotation.
 
-**Version:** 1.0.0
+**Version:** 1.3.0
 **Group ID:** `dev.packageprivate.analyzer`
 
 ## Building
@@ -32,7 +32,7 @@ Add the plugin to your Maven project's `pom.xml`:
 <plugin>
     <groupId>dev.packageprivate.analyzer</groupId>
     <artifactId>package-private-analyzer-maven-plugin</artifactId>
-    <version>1.0.0</version>
+    <version>1.3.0</version>
     <executions>
         <execution>
             <goals>
@@ -46,7 +46,7 @@ Add the plugin to your Maven project's `pom.xml`:
 Run the analyzer:
 
 ```bash
-mvn dev.packageprivate.analyzer:package-private-analyzer-maven-plugin:1.0.0:analyze
+mvn dev.packageprivate.analyzer:package-private-analyzer-maven-plugin:1.3.0:analyze
 ```
 
 Or if configured in the build lifecycle:
@@ -70,7 +70,7 @@ Example configuration:
 <plugin>
     <groupId>dev.packageprivate.analyzer</groupId>
     <artifactId>package-private-analyzer-maven-plugin</artifactId>
-    <version>1.0.0</version>
+    <version>1.3.0</version>
     <configuration>
         <includePublic>true</includePublic>
         <includeInternal>false</includeInternal>

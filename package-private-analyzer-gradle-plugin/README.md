@@ -2,7 +2,7 @@
 
 This Gradle plugin analyzes Kotlin code to find candidates for the `@PackagePrivate` annotation.
 
-**Version:** 1.0.0  
+**Version:** 1.3.0  
 **Group ID:** `dev.packageprivate.analyzer`  
 **Plugin ID:** `dev.packageprivate.analyzer`
 
@@ -30,7 +30,7 @@ Apply the plugin to your Gradle project:
 ```kotlin
 plugins {
     kotlin("jvm") version "2.3.0"
-    id("dev.packageprivate.analyzer") version "1.0.0"
+    id("dev.packageprivate.analyzer") version "1.3.0"
 }
 ```
 
@@ -42,7 +42,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath("dev.packageprivate.analyzer:package-private-analyzer-gradle-plugin:1.0.0")
+        classpath("dev.packageprivate.analyzer:package-private-analyzer-gradle-plugin:1.3.0")
     }
 }
 
@@ -122,8 +122,8 @@ Typical workflow:
 ```kotlin
 plugins {
     kotlin("jvm") version "2.3.0"
-    id("dev.packageprivate.package-private") version "1.2.0"  // Compiler plugin
-    id("dev.packageprivate.analyzer") version "1.0.0"         // Analyzer plugin
+    id("dev.packageprivate.package-private") version "1.3.0"  // Compiler plugin
+    id("dev.packageprivate.analyzer") version "1.3.0"         // Analyzer plugin
 }
 ```
 

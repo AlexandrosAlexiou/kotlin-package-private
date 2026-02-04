@@ -10,7 +10,7 @@ A Kotlin compiler plugin that adds <b>package-private</b> visibility to Kotlin, 
 
 <p align="center">
   <a href="https://kotlinlang.org"><img src="https://img.shields.io/badge/Kotlin-2.3.0-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white" alt="Kotlin"></a>
-  <a href="https://github.com/AlexandrosAlexiou/package-private/releases/tag/v1.2.0"><img src="https://img.shields.io/badge/Release-v1.2.0-blue?style=for-the-badge" alt="Release"></a>
+  <a href="https://github.com/AlexandrosAlexiou/package-private/releases/tag/v1.3.0"><img src="https://img.shields.io/badge/Release-v1.3.0-blue?style=for-the-badge" alt="Release"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-green?style=for-the-badge" alt="License"></a>
   <a href="https://github.com/AlexandrosAlexiou/package-private/issues"><img src="https://img.shields.io/github/issues/AlexandrosAlexiou/package-private?style=for-the-badge" alt="Issues"></a>
 </p>
@@ -123,8 +123,8 @@ repositories {
 }
 
 dependencies {
-    implementation("dev.packageprivate:package-private-annotations:1.1.0")
-    kotlinCompilerPluginClasspath("dev.packageprivate:package-private-compiler-plugin:1.1.0")
+    implementation("dev.packageprivate:package-private-annotations:1.3.0")
+    kotlinCompilerPluginClasspath("dev.packageprivate:package-private-compiler-plugin:1.3.0")
 }
 ```
 
@@ -148,8 +148,8 @@ repositories {
 }
 
 dependencies {
-    implementation 'dev.packageprivate:package-private-annotations:1.1.0'
-    kotlinCompilerPluginClasspath 'dev.packageprivate:package-private-compiler-plugin:1.1.0'
+    implementation 'dev.packageprivate:package-private-annotations:1.3.0'
+    kotlinCompilerPluginClasspath 'dev.packageprivate:package-private-compiler-plugin:1.3.0'
 }
 ```
 
@@ -167,7 +167,7 @@ dependencies {
     <dependency>
         <groupId>dev.packageprivate</groupId>
         <artifactId>package-private-annotations</artifactId>
-        <version>1.1.0</version>
+        <version>1.3.0</version>
     </dependency>
 </dependencies>
 
@@ -194,7 +194,7 @@ dependencies {
                 <dependency>
                     <groupId>dev.packageprivate</groupId>
                     <artifactId>package-private-compiler-plugin</artifactId>
-                    <version>1.1.0</version>
+                    <version>1.3.0</version>
                 </dependency>
             </dependencies>
         </plugin>
@@ -279,7 +279,7 @@ The package-private project includes **separate analyzer plugins** that scan you
 **Gradle:**
 ```kotlin
 plugins {
-    id("dev.packageprivate.analyzer") version "1.0.0"
+    id("dev.packageprivate.analyzer") version "1.3.0"
 }
 ```
 
@@ -288,7 +288,7 @@ plugins {
 <plugin>
     <groupId>dev.packageprivate.analyzer</groupId>
     <artifactId>package-private-analyzer-maven-plugin</artifactId>
-    <version>1.0.0</version>
+    <version>1.3.0</version>
 </plugin>
 ```
 
@@ -301,7 +301,7 @@ plugins {
 
 **Maven:**
 ```bash
-mvn dev.packageprivate.analyzer:package-private-analyzer-maven-plugin:1.0.0:analyze
+mvn dev.packageprivate.analyzer:package-private-analyzer-maven-plugin:1.3.0:analyze
 ```
 
 ### Example Output
@@ -347,7 +347,7 @@ tasks.named<AnalyzePackagePrivateCandidatesTask>("analyzePackagePrivateCandidate
 <plugin>
     <groupId>dev.packageprivate.analyzer</groupId>
     <artifactId>package-private-analyzer-maven-plugin</artifactId>
-    <version>1.0.0</version>
+    <version>1.3.0</version>
     <configuration>
         <includePublic>true</includePublic>
         <includeInternal>true</includeInternal>
