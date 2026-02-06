@@ -486,12 +486,29 @@ class SourceAnalyzer {
 
                     // Handle method calls on instances: api.execute() where api is of type
                     // PublicApi
-                    // Check if receiver is a variable we know the type of
                     if (selectorExpr is KtCallExpression) {
-                        val receiverName = receiverExpr.text
-                        val receiverTypeFqName = localVarTypes[receiverName]
+                        val methodName = selectorExpr.calleeExpression?.text ?: return
+                        var receiverTypeFqName: String? = null
+                        
+                        // Case 1: Receiver is a variable we know the type of (e.g., api.execute())
+                        if (receiverExpr !is KtCallExpression) {
+                            val receiverName = receiverExpr.text
+                            receiverTypeFqName = localVarTypes[receiverName]
+                        }
+                        
+                        // Case 2: Receiver is a constructor call (e.g., Calculator().add())
+                        if (receiverExpr is KtCallExpression) {
+                            val constructorName = receiverExpr.calleeExpression?.text ?: return
+                            receiverTypeFqName = resolveToFqName(
+                                constructorName,
+                                imports,
+                                starImportPackages,
+                                callerPackage,
+                                knownDeclarations,
+                            )
+                        }
+                        
                         if (receiverTypeFqName != null) {
-                            val methodName = selectorExpr.calleeExpression?.text ?: return
                             val methodFqName = "$receiverTypeFqName.$methodName"
                             if (methodFqName in knownDeclarations) {
                                 usages.add(
