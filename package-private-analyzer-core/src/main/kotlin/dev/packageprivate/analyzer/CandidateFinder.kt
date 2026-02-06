@@ -36,6 +36,9 @@ class CandidateFinder(
             // Skip if protected (different semantics)
             if (declaration.visibility == Visibility.PROTECTED) return@mapNotNull null
             
+            // Skip main functions (application entry points)
+            if (declaration.kind == DeclarationKind.FUNCTION && declaration.name == "main") return@mapNotNull null
+            
             // Check configuration
             if (declaration.visibility == Visibility.PUBLIC && !includePublic) return@mapNotNull null
             if (declaration.visibility == Visibility.INTERNAL && !includeInternal) return@mapNotNull null

@@ -24,17 +24,34 @@ class AnalyzerGradleIntegrationTest {
 
         val result = runGradle(tempDir, "analyzePackagePrivateCandidates")
         assertEquals(0, result.exitCode, "Analyzer should succeed: ${result.output}")
-        
+
         // Should find candidates: InternalHelper, InternalService, utilityFunction
         assertContains(result.output, "InternalHelper")
         assertContains(result.output, "InternalService")
         assertContains(result.output, "utilityFunction")
-        
+
         // Should show they're only used in com.example.internal
         assertContains(result.output, "Only used in package:")
-        
+
         // Should find multiple candidates
         assertContains(result.output, "candidates found")
+    }
+
+    @Test
+    fun `analyzer excludes main function from candidates`() {
+        copyResourceProject("gradle-analyzer-project", tempDir)
+
+        val result = runGradle(tempDir, "analyzePackagePrivateCandidates")
+        assertEquals(0, result.exitCode, "Analyzer should succeed: ${result.output}")
+
+        assertContains(result.output, "candidates found")
+
+        val mainPattern = Regex("""com\.example\.main\s*\(function\)""")
+        assertEquals(
+            false,
+            mainPattern.containsMatchIn(result.output),
+            "main function should not be reported as a candidate",
+        )
     }
 
     private fun copyResourceProject(name: String, targetDir: File) {

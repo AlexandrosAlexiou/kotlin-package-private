@@ -14,19 +14,44 @@ class AnalyzerMavenIntegrationTest {
     fun `maven analyzer finds candidates in same package`() {
         copyResourceProject("maven-analyzer-project", tempDir)
 
-        val result = runMaven(tempDir, "dev.packageprivate.analyzer:package-private-analyzer-maven-plugin:1.3.0:analyze")
+        val result =
+            runMaven(
+                tempDir,
+                "dev.packageprivate.analyzer:package-private-analyzer-maven-plugin:1.3.0:analyze",
+            )
         assertEquals(0, result.exitCode, "Analyzer should succeed: ${result.output}")
-        
+
         // Should find candidates: InternalHelper, InternalService, utilityFunction
         assertContains(result.output, "InternalHelper")
         assertContains(result.output, "InternalService")
         assertContains(result.output, "utilityFunction")
-        
+
         // Should show they're only used in their packages
         assertContains(result.output, "Only used in package:")
-        
+
         // Should find multiple candidates
         assertContains(result.output, "candidates found")
+    }
+
+    @Test
+    fun `maven analyzer excludes main function from candidates`() {
+        copyResourceProject("maven-analyzer-project", tempDir)
+
+        val result =
+            runMaven(
+                tempDir,
+                "dev.packageprivate.analyzer:package-private-analyzer-maven-plugin:1.3.0:analyze",
+            )
+        assertEquals(0, result.exitCode, "Analyzer should succeed: ${result.output}")
+
+        assertContains(result.output, "candidates found")
+
+        val mainPattern = Regex("""com\.example\.main\s*\(function\)""")
+        assertEquals(
+            false,
+            mainPattern.containsMatchIn(result.output),
+            "main function should not be reported as a candidate",
+        )
     }
 
     private fun copyResourceProject(name: String, targetDir: File) {
