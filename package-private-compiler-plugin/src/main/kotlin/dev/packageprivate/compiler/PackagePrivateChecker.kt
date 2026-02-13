@@ -60,9 +60,9 @@ private fun FirAnnotation.hasPackagePrivateClassId(): Boolean {
 
 @OptIn(SymbolInternals::class)
 private object PackagePrivateCallChecker : FirCallChecker(MppCheckerKind.Common) {
-    context(ctx: CheckerContext, reporter: DiagnosticReporter)
+    context(context: CheckerContext, reporter: DiagnosticReporter)
     override fun check(expression: FirCall) {
-        val fileSymbol = ctx.containingFileSymbol ?: return
+        val fileSymbol = context.containingFileSymbol ?: return
         val callerPackage = fileSymbol.fir.packageDirective.packageFqName
 
         val resolvable = expression as? FirResolvable ?: return
@@ -97,7 +97,7 @@ private object PackagePrivateCallChecker : FirCallChecker(MppCheckerKind.Common)
         }
     }
 
-    context(ctx: CheckerContext, reporter: DiagnosticReporter)
+    context(context: CheckerContext, reporter: DiagnosticReporter)
     private fun checkSymbol(
         symbol: FirCallableSymbol<*>,
         callerPackage: FqName,
@@ -134,7 +134,7 @@ private object PackagePrivateCallChecker : FirCallChecker(MppCheckerKind.Common)
 
 @OptIn(SymbolInternals::class)
 private object RedundantPackagePrivateChecker : FirCallableDeclarationChecker(MppCheckerKind.Common) {
-    context(ctx: CheckerContext, reporter: DiagnosticReporter)
+    context(context: CheckerContext, reporter: DiagnosticReporter)
     override fun check(declaration: FirCallableDeclaration) {
         // Check if this declaration has @PackagePrivate
         val hasPackagePrivate = declaration.annotations.any { it.hasPackagePrivateClassId() }
@@ -159,16 +159,16 @@ private object RedundantPackagePrivateChecker : FirCallableDeclarationChecker(Mp
 
 @OptIn(SymbolInternals::class)
 private object PackagePrivateTypeAliasChecker : FirResolvedTypeRefChecker(MppCheckerKind.Common) {
-    context(ctx: CheckerContext, reporter: DiagnosticReporter)
+    context(context: CheckerContext, reporter: DiagnosticReporter)
     override fun check(typeRef: FirResolvedTypeRef) {
-        val fileSymbol = ctx.containingFileSymbol ?: return
+        val fileSymbol = context.containingFileSymbol ?: return
         val callerPackage = fileSymbol.fir.packageDirective.packageFqName
 
         // Check if the type is a typealias
         val coneType = typeRef.coneType.abbreviatedTypeOrSelf
 
         @Suppress("DEPRECATION")
-        val typeAliasSymbol = coneType.toTypeAliasSymbol(ctx.session) ?: return
+        val typeAliasSymbol = coneType.toTypeAliasSymbol(context.session) ?: return
 
         // Check if the typealias has @PackagePrivate
         val annotation = typeAliasSymbol.annotations.firstOrNull { it.hasPackagePrivateClassId() } ?: return
