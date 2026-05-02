@@ -29,7 +29,7 @@ Apply the plugin to your Gradle project:
 
 ```kotlin
 plugins {
-    kotlin("jvm") version "2.3.10"
+    kotlin("jvm") version "2.3.21"
     id("dev.packageprivate.analyzer") version "1.3.2"
 }
 ```
@@ -121,7 +121,7 @@ Typical workflow:
 
 ```kotlin
 plugins {
-    kotlin("jvm") version "2.3.10"
+    kotlin("jvm") version "2.3.21"
     id("dev.packageprivate.package-private") version "1.3.2"  // Compiler plugin
     id("dev.packageprivate.analyzer") version "1.3.2"         // Analyzer plugin
 }

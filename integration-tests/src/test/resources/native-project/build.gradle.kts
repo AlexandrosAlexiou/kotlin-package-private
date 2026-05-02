@@ -1,4 +1,4 @@
-plugins { kotlin("multiplatform") version "2.3.10" }
+plugins { kotlin("multiplatform") version "2.3.21" }
 
 repositories {
     mavenLocal()

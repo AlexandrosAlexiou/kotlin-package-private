@@ -1,5 +1,3 @@
-@file:Suppress("CONTEXT_RECEIVERS_DEPRECATED")
-
 package dev.packageprivate.compiler
 
 import org.jetbrains.kotlin.diagnostics.KtDiagnosticFactoryToRendererMap

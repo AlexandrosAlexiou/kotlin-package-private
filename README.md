@@ -108,7 +108,7 @@ Add to `~/.m2/settings.xml`:
 ```kotlin
 // build.gradle.kts
 plugins {
-    kotlin("jvm") version "2.3.10"
+    kotlin("jvm") version "2.3.21"
 }
 
 repositories {
@@ -133,7 +133,7 @@ dependencies {
 ```groovy
 // build.gradle
 plugins {
-    id 'org.jetbrains.kotlin.jvm' version '2.3.10'
+    id 'org.jetbrains.kotlin.jvm' version '2.3.21'
 }
 
 repositories {

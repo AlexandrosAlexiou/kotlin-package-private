@@ -5,7 +5,7 @@ kotlin {
     compilerOptions { freeCompilerArgs.add("-Xcontext-parameters") }
 }
 
-val kotlinVersion = "2.3.10"
+val kotlinVersion = "2.3.21"
 
 dependencies {
     compileOnly(kotlin("compiler-embeddable"))
